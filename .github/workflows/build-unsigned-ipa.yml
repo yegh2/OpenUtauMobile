@@ -21,11 +21,14 @@ jobs:
       - name: Install MAUI iOS workload
         run: dotnet workload install maui-ios
 
-      # 🔧 关键修改：只还原 iOS 项目，而不是整个 .sln
+      # ⭐ 关键：降级 Avalonia.iOS 到兼容 net9.0-ios 的版本（例如 11.0.10）
+      - name: Downgrade Avalonia.iOS
+        run: |
+          sed -i 's|<PackageReference Include="Avalonia.iOS" Version="12.1.0" />|<PackageReference Include="Avalonia.iOS" Version="11.0.10" />|g' OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj
+
       - name: Restore dependencies (iOS only)
         run: dotnet restore OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj -p:TargetFramework=net9.0-ios
 
-      # 🔧 关键修改：只发布 iOS 项目
       - name: Build .app without signing
         run: |
           dotnet publish OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj \
