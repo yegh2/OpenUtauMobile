@@ -11,7 +11,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: dev          # 使用 dev 分支（如需 master 可改为 master）
+          ref: dev
 
       - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
@@ -21,21 +21,9 @@ jobs:
       - name: Install MAUI iOS workload
         run: dotnet workload install maui-ios
 
-      # ---------- 关键步骤：降级 Avalonia.iOS 到兼容版本 ----------
-      - name: Downgrade Avalonia.iOS to 11.0.10
-        run: |
-          echo "=== Before modification ==="
-          grep -n "Avalonia.iOS" OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj || echo "Pattern not found"
-
-          # 使用 perl 进行稳健的文本替换（macOS 默认自带 perl）
-          perl -pi -e 's/<PackageReference Include="Avalonia\.iOS" Version="[^"]*" \/>/<PackageReference Include="Avalonia.iOS" Version="11.0.10" \/>/g' OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj
-
-          echo "=== After modification ==="
-          grep -n "Avalonia.iOS" OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj || echo "Pattern not found"
-      # -----------------------------------------------------------
-
+      # 关键：通过 /p:AvaloniaVersion=11.0.10 覆盖项目中的 $(AvaloniaVersion) 变量
       - name: Restore dependencies (iOS only)
-        run: dotnet restore OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj -p:TargetFramework=net9.0-ios
+        run: dotnet restore OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj -p:TargetFramework=net9.0-ios -p:AvaloniaVersion=11.0.10
 
       - name: Build .app without signing
         run: |
@@ -45,6 +33,7 @@ jobs:
             -p:EnableCodeSigning=false \
             -p:RuntimeIdentifier=ios-arm64 \
             -p:TargetFrameworks=net9.0-ios \
+            -p:AvaloniaVersion=11.0.10 \
             -o ./output
 
       - name: Package .app into unsigned .ipa
