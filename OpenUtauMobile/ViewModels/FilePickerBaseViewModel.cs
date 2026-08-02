@@ -77,10 +77,12 @@ public abstract class FilePickerBaseViewModel : PopupViewModelBase
 
         if (!string.IsNullOrEmpty(initialPath))
             CurrentPath = initialPath;
+        else if (OperatingSystem.IsAndroid())
+            CurrentPath = "/sdcard";
+        else if (OperatingSystem.IsIOS())
+            CurrentPath = OpenUtau.Core.PathManager.Inst.DataPath; // iOS: Documents/OpenUtau
         else
-            CurrentPath = OperatingSystem.IsAndroid()
-                ? "/sdcard"
-                : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            CurrentPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
         // 构造时先置为加载中，等 View 附加到视觉树后再真正开始 I/O
         IsLoading = true;
