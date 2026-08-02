@@ -25,7 +25,28 @@ jobs:
       - name: Install MAUI iOS workload
         run: dotnet workload install maui-ios
 
-      # 只恢复 iOS 项目（避免其他平台的依赖）
+      # 🔧 统一目标框架：将所有被 iOS 项目引用的 .csproj 的目标框架改为 net10.0-ios
+      - name: Unify target frameworks to net10.0-ios
+        run: |
+          # 需要修改的项目列表（按实际引用关系）
+          projects=(
+            "OpenUtauMobile/OpenUtauMobile.csproj"
+            "OpenUtau.Core/OpenUtau.Core.csproj"
+            "OpenUtau.Plugin.Builtin/OpenUtau.Plugin.Builtin.csproj"
+            "OpenUtauMobile.Plugin.Renderers/OpenUtauMobile.Plugin.Renderers.csproj"
+          )
+          for proj in "${projects[@]}"; do
+            if [ -f "$proj" ]; then
+              echo "Modifying $proj"
+              # 将 <TargetFramework>...</TargetFramework> 替换为 <TargetFramework>net10.0-ios</TargetFramework>
+              sed -i '' -E 's|<TargetFramework>[^<]*</TargetFramework>|<TargetFramework>net10.0-ios</TargetFramework>|g' "$proj"
+              # 如果存在 <TargetFrameworks>，也将其替换为单个 TargetFramework
+              sed -i '' -E 's|<TargetFrameworks>[^<]*</TargetFrameworks>|<TargetFramework>net10.0-ios</TargetFramework>|g' "$proj"
+            else
+              echo "Warning: $proj not found, skipping"
+            fi
+          done
+
       - name: Restore dependencies (iOS only)
         run: dotnet restore OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj -p:TargetFramework=net10.0-ios
 
