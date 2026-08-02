@@ -44,17 +44,38 @@ jobs:
             fi
           done
 
-      # ONNX Runtime iOS targets add onnxruntime.xcframework.zip as a NativeReference.
-      # The xcframework contains a Mac Catalyst slice (links AppKit), so the iOS linker
-      # fails with: ld: framework 'AppKit' not found. Excluding build assets drops the
-      # broken targets while keeping the managed reference (compile still works).
-      - name: Exclude OnnxRuntime build assets (AppKit fix)
-        run: |
-          sed -i '' 's|<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.26.0" />|<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.26.0" ExcludeAssets="build;buildTransitive" />|' OpenUtau.Core/OpenUtau.Core.csproj
-          grep -n "OnnxRuntime" OpenUtau.Core/OpenUtau.Core.csproj
-
       - name: Restore dependencies (iOS only)
         run: dotnet restore OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj -p:TargetFramework=net10.0-ios
+
+      # ONNX Runtime iOS targets link onnxruntime.xcframework.zip as a NativeReference.
+      # The xcframework also contains a Mac Catalyst slice whose binary links AppKit,
+      # so the iOS linker fails with "framework 'AppKit' not found". Patch the cached
+      # zip to keep only the ios-arm64 slice (also fixes _RegisterCustomOps resolution
+      # by keeping the static library in the link).
+      - name: Patch OnnxRuntime xcframework (drop maccatalyst slice)
+        run: |
+          set -e
+          ZIP=$(find /Users/runner/.nuget/packages/microsoft.ml.onnxruntime -name "onnxruntime.xcframework.zip" | head -1)
+          echo "Found: $ZIP"
+          DIR=$(dirname "$ZIP")
+          mkdir -p /tmp/xcf
+          cd /tmp/xcf
+          unzip -q "$ZIP"
+          rm -rf onnxruntime.xcframework/ios-arm64_x86_64-maccatalyst
+          rm -rf onnxruntime.xcframework/ios-arm64_x86_64-simulator
+          python3 - <<'PYEOF'
+import plistlib
+path = 'onnxruntime.xcframework/Info.plist'
+with open(path, 'rb') as f:
+    p = plistlib.load(f)
+p['AvailableLibraries'] = [lib for lib in p['AvailableLibraries']
+                           if lib.get('LibraryIdentifier') == 'ios-arm64']
+with open(path, 'wb') as f:
+    plistlib.dump(p, f)
+print('AvailableLibraries now:', [l['LibraryIdentifier'] for l in p['AvailableLibraries']])
+PYEOF
+          zip -rq "$ZIP" onnxruntime.xcframework
+          echo "Patched xcframework zip"
 
       # Avalonia 12.x ships a correct default for AvaloniaBuildTasksLocation
       # (buildTransitive/Avalonia.props points to tools/netstandard2.0/Avalonia.Build.Tasks.dll).
