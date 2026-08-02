@@ -25,7 +25,7 @@ jobs:
       - name: Install MAUI iOS workload
         run: dotnet workload install maui-ios
 
-      # 缁熶竴鐩爣妗嗘灦涓?net10.0-ios
+      # Unify target frameworks to net10.0-ios
       - name: Unify target frameworks
         run: |
           projects=(
@@ -44,7 +44,11 @@ jobs:
             fi
           done
 
-      # ONNX Runtime 鐨?iOS targets 浼氭妸 onnxruntime.xcframework.zip 浣滀负 NativeReference 閾炬帴锛?      # 鍏朵腑鍖呭惈 Mac Catalyst slice锛堥摼鎺?AppKit锛夛紝瀵艰嚧 iOS 閾炬帴鏃舵姤 ld: framework 'AppKit' not found銆?      # 鎺掗櫎鍏?build/buildTransitive 璧勪骇鍗冲彲鍘绘帀鍧?targets锛坢anaged 寮曠敤淇濈暀锛岀紪璇戜笉鍙楀奖鍝嶏級銆?      - name: Exclude OnnxRuntime build assets (AppKit fix)
+      # ONNX Runtime iOS targets add onnxruntime.xcframework.zip as a NativeReference.
+      # The xcframework contains a Mac Catalyst slice (links AppKit), so the iOS linker
+      # fails with: ld: framework 'AppKit' not found. Excluding build assets drops the
+      # broken targets while keeping the managed reference (compile still works).
+      - name: Exclude OnnxRuntime build assets (AppKit fix)
         run: |
           sed -i '' 's|<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.26.0" />|<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.26.0" ExcludeAssets="build;buildTransitive" />|' OpenUtau.Core/OpenUtau.Core.csproj
           grep -n "OnnxRuntime" OpenUtau.Core/OpenUtau.Core.csproj
@@ -52,8 +56,9 @@ jobs:
       - name: Restore dependencies (iOS only)
         run: dotnet restore OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj -p:TargetFramework=net10.0-ios
 
-      # Avalonia 12.x 鍖呰嚜甯?AvaloniaBuildTasksLocation 榛樿鍊?      # 锛坆uildTransitive/Avalonia.props 鎸囧悜 tools/netstandard2.0/Avalonia.Build.Tasks.dll锛夛紝
-      # 鎵嬪姩瑕嗙洊鍙嶈€屼細鐮村潖浠诲姟鍔犺浇锛屾晠涓嶅啀浼犺鍙傛暟
+      # Avalonia 12.x ships a correct default for AvaloniaBuildTasksLocation
+      # (buildTransitive/Avalonia.props points to tools/netstandard2.0/Avalonia.Build.Tasks.dll).
+      # Overriding it with a directory path breaks task loading, so do not pass it.
       - name: Build .app without signing
         run: |
           dotnet publish OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj \
