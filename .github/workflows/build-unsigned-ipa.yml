@@ -67,6 +67,21 @@ jobs:
           zip -rq "$ZIP" onnxruntime.xcframework
           echo "Patched xcframework zip"
 
+      # The iOS-specific Microsoft.ML.OnnxRuntime.dll declares DllImport(__Internal)
+      # RegisterCustomOps, but the onnxruntime ios-arm64 static lib does not export
+      # that symbol (it only appears in an error string). Xamarin passes -u
+      # _RegisterCustomOps to the linker, which fails. Provide a stub that defines it.
+      - name: Add RegisterCustomOps stub
+        run: |
+          set -e
+          printf 'int RegisterCustomOps(void) { return 0; }\n' > /tmp/onnx_stub.c
+          clang -arch arm64 -isysroot "$(xcrun --sdk iphoneos --show-sdk-path)" -c /tmp/onnx_stub.c -o /tmp/onnx_stub.o
+          ar rcs /tmp/libonnx_stub.a /tmp/onnx_stub.o
+          echo "stub lib built:"
+          nm /tmp/libonnx_stub.a
+          sed -i '' 's|</Project>|<ItemGroup><NativeReference Include="/tmp/libonnx_stub.a"><Kind>Static</Kind><IsCxx>True</IsCxx><SmartLink>True</SmartLink></NativeReference></ItemGroup></Project>|' OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj
+          echo "injected NativeReference into iOS csproj"
+
       # Avalonia 12.x ships a correct default for AvaloniaBuildTasksLocation
       # (buildTransitive/Avalonia.props points to tools/netstandard2.0/Avalonia.Build.Tasks.dll).
       # Overriding it with a directory path breaks task loading, so do not pass it.
