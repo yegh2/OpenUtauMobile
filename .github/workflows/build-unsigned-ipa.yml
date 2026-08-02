@@ -44,6 +44,11 @@ jobs:
             fi
           done
 
+      # ONNX Runtime 鐨?iOS targets 浼氭妸 onnxruntime.xcframework.zip 浣滀负 NativeReference 閾炬帴锛?      # 鍏朵腑鍖呭惈 Mac Catalyst slice锛堥摼鎺?AppKit锛夛紝瀵艰嚧 iOS 閾炬帴鏃舵姤 ld: framework 'AppKit' not found銆?      # 鎺掗櫎鍏?build/buildTransitive 璧勪骇鍗冲彲鍘绘帀鍧?targets锛坢anaged 寮曠敤淇濈暀锛岀紪璇戜笉鍙楀奖鍝嶏級銆?      - name: Exclude OnnxRuntime build assets (AppKit fix)
+        run: |
+          sed -i '' 's|<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.26.0" />|<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.26.0" ExcludeAssets="build;buildTransitive" />|' OpenUtau.Core/OpenUtau.Core.csproj
+          grep -n "OnnxRuntime" OpenUtau.Core/OpenUtau.Core.csproj
+
       - name: Restore dependencies (iOS only)
         run: dotnet restore OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj -p:TargetFramework=net10.0-ios
 
