@@ -63,17 +63,7 @@ jobs:
           unzip -q "$ZIP"
           rm -rf onnxruntime.xcframework/ios-arm64_x86_64-maccatalyst
           rm -rf onnxruntime.xcframework/ios-arm64_x86_64-simulator
-          python3 - <<'PYEOF'
-import plistlib
-path = 'onnxruntime.xcframework/Info.plist'
-with open(path, 'rb') as f:
-    p = plistlib.load(f)
-p['AvailableLibraries'] = [lib for lib in p['AvailableLibraries']
-                           if lib.get('LibraryIdentifier') == 'ios-arm64']
-with open(path, 'wb') as f:
-    plistlib.dump(p, f)
-print('AvailableLibraries now:', [l['LibraryIdentifier'] for l in p['AvailableLibraries']])
-PYEOF
+          python3 -c "import plistlib; p=plistlib.load(open('onnxruntime.xcframework/Info.plist','rb')); p['AvailableLibraries']=[l for l in p['AvailableLibraries'] if l.get('LibraryIdentifier')=='ios-arm64']; plistlib.dump(p, open('onnxruntime.xcframework/Info.plist','wb')); print([l['LibraryIdentifier'] for l in p['AvailableLibraries']])"
           zip -rq "$ZIP" onnxruntime.xcframework
           echo "Patched xcframework zip"
 
