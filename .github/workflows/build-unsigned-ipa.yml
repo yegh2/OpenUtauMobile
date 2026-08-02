@@ -25,10 +25,9 @@ jobs:
       - name: Install MAUI iOS workload
         run: dotnet workload install maui-ios
 
-      # 🔧 统一目标框架：将所有被 iOS 项目引用的 .csproj 的目标框架改为 net10.0-ios
-      - name: Unify target frameworks to net10.0-ios
+      # 将所有被 iOS 项目引用的项目的 TargetFramework 统一为 net10.0-ios
+      - name: Unify target frameworks
         run: |
-          # 需要修改的项目列表（按实际引用关系）
           projects=(
             "OpenUtauMobile/OpenUtauMobile.csproj"
             "OpenUtau.Core/OpenUtau.Core.csproj"
@@ -38,9 +37,7 @@ jobs:
           for proj in "${projects[@]}"; do
             if [ -f "$proj" ]; then
               echo "Modifying $proj"
-              # 将 <TargetFramework>...</TargetFramework> 替换为 <TargetFramework>net10.0-ios</TargetFramework>
               sed -i '' -E 's|<TargetFramework>[^<]*</TargetFramework>|<TargetFramework>net10.0-ios</TargetFramework>|g' "$proj"
-              # 如果存在 <TargetFrameworks>，也将其替换为单个 TargetFramework
               sed -i '' -E 's|<TargetFrameworks>[^<]*</TargetFrameworks>|<TargetFramework>net10.0-ios</TargetFramework>|g' "$proj"
             else
               echo "Warning: $proj not found, skipping"
@@ -50,14 +47,25 @@ jobs:
       - name: Restore dependencies (iOS only)
         run: dotnet restore OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj -p:TargetFramework=net10.0-ios
 
+      # 获取 Avalonia 包版本（来自 OpenUtauMobile.iOS.csproj 中的 $(AvaloniaVersion)）
+      - name: Get Avalonia version
+        id: get_avalonia_version
+        run: |
+          AVALONIA_VERSION=$(grep -oP '<AvaloniaVersion>\K[^<]+' OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj || echo "12.1.0")
+          echo "version=$AVALONIA_VERSION" >> $GITHUB_OUTPUT
+
+      # 构建并发布 IPA（显式指定 AvaloniaBuildTasksLocation）
       - name: Build .app without signing
         run: |
+          AVALONIA_VERSION="${{ steps.get_avalonia_version.outputs.version }}"
+          AVALONIA_TASKS_PATH="/Users/runner/.nuget/packages/avalonia/${AVALONIA_VERSION}/buildTransitive/"
           dotnet publish OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj \
             -f net10.0-ios \
             -c Debug \
             -p:EnableCodeSigning=false \
             -p:RuntimeIdentifier=ios-arm64 \
             -p:TargetFrameworks=net10.0-ios \
+            -p:AvaloniaBuildTasksLocation="$AVALONIA_TASKS_PATH" \
             -o ./output
 
       - name: Package .app into unsigned .ipa
