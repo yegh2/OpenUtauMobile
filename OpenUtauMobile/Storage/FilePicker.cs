@@ -15,6 +15,7 @@ namespace OpenUtauMobile.Storage;
 public static class FilePicker
 {
     private static readonly bool UseInternalPicker = OperatingSystem.IsAndroid()
+                                                     || OperatingSystem.IsIOS()
 #if DEBUG
                                                      || OperatingSystem.IsWindows()
 #endif
@@ -24,6 +25,8 @@ public static class FilePicker
     /// </summary>
     /// <returns></returns>
     private static bool CheckAndRequestStoragePermission()
+    {
+        if (OperatingSystem.IsIOS()) return true; // iOS sandbox needs no external storage permission
     {
         IExternalStorageService? service = ServiceHub.ExternalStorageService;
         if (service == null) return false;
