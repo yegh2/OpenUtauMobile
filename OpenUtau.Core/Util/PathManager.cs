@@ -22,7 +22,12 @@ namespace OpenUtau.Core {
             {
                 return;
             }
-            if (OS.IsMacOS()) {
+            if (OS.IsIOS()) {
+                string dataHome = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+                DataPath = Path.Combine(dataHome, "OpenUtau");
+                CachePath = Path.Combine(DataPath, "Cache");
+                HomePathIsAscii = true;
+            } else if (OS.IsMacOS()) {
                 string userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
                 DataPath = Path.Combine(userHome, "Library", "OpenUtau");
                 CachePath = Path.Combine(userHome, "Library", "Caches", "OpenUtau");
