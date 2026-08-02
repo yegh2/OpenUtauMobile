@@ -25,7 +25,7 @@ jobs:
       - name: Install MAUI iOS workload
         run: dotnet workload install maui-ios
 
-      # 将所有被 iOS 项目引用的项目的 TargetFramework 统一为 net10.0-ios
+      # 统一目标框架为 net10.0-ios
       - name: Unify target frameworks
         run: |
           projects=(
@@ -47,25 +47,30 @@ jobs:
       - name: Restore dependencies (iOS only)
         run: dotnet restore OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj -p:TargetFramework=net10.0-ios
 
-      # 获取 Avalonia 包版本（来自 OpenUtauMobile.iOS.csproj 中的 $(AvaloniaVersion)）
-      - name: Get Avalonia version
-        id: get_avalonia_version
+      # 查找 Avalonia 任务程序集的精确路径
+      - name: Find Avalonia build tasks assembly
+        id: find_avalonia_tasks
         run: |
-          AVALONIA_VERSION=$(grep -oP '<AvaloniaVersion>\K[^<]+' OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj || echo "12.1.0")
-          echo "version=$AVALONIA_VERSION" >> $GITHUB_OUTPUT
+          AVALONIA_TASKS_DLL=$(find /Users/runner/.nuget/packages/avalonia -name "Avalonia.Build.Tasks.dll" | head -1)
+          if [ -z "$AVALONIA_TASKS_DLL" ]; then
+            echo "Error: Avalonia.Build.Tasks.dll not found"
+            exit 1
+          fi
+          AVALONIA_TASKS_DIR=$(dirname "$AVALONIA_TASKS_DLL")
+          echo "tasks_dir=$AVALONIA_TASKS_DIR" >> $GITHUB_OUTPUT
+          echo "Found tasks at: $AVALONIA_TASKS_DIR"
 
-      # 构建并发布 IPA（显式指定 AvaloniaBuildTasksLocation）
+      # 构建并发布 IPA（使用查找到的精确路径）
       - name: Build .app without signing
         run: |
-          AVALONIA_VERSION="${{ steps.get_avalonia_version.outputs.version }}"
-          AVALONIA_TASKS_PATH="/Users/runner/.nuget/packages/avalonia/${AVALONIA_VERSION}/buildTransitive/"
+          AVALONIA_TASKS_DIR="${{ steps.find_avalonia_tasks.outputs.tasks_dir }}"
           dotnet publish OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj \
             -f net10.0-ios \
             -c Debug \
             -p:EnableCodeSigning=false \
             -p:RuntimeIdentifier=ios-arm64 \
             -p:TargetFrameworks=net10.0-ios \
-            -p:AvaloniaBuildTasksLocation="$AVALONIA_TASKS_PATH" \
+            -p:AvaloniaBuildTasksLocation="$AVALONIA_TASKS_DIR/" \
             -o ./output
 
       - name: Package .app into unsigned .ipa
