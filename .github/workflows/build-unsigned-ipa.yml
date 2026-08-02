@@ -25,8 +25,9 @@ jobs:
       - name: Install MAUI iOS workload
         run: dotnet workload install maui-ios
 
-      - name: Restore dependencies (solution-wide)
-        run: dotnet restore OpenUtauMobile.sln -p:TargetFramework=net10.0-ios
+      # 只恢复 iOS 项目（避免其他平台的依赖）
+      - name: Restore dependencies (iOS only)
+        run: dotnet restore OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj -p:TargetFramework=net10.0-ios
 
       - name: Build .app without signing
         run: |
