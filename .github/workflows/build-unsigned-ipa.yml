@@ -11,7 +11,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: dev
+          ref: dev          # 使用 dev 分支（如需 master 可改为 master）
 
       - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
@@ -21,9 +21,18 @@ jobs:
       - name: Install MAUI iOS workload
         run: dotnet workload install maui-ios
 
-      - name: Downgrade Avalonia.iOS
+      # ---------- 关键步骤：降级 Avalonia.iOS 到兼容版本 ----------
+      - name: Downgrade Avalonia.iOS to 11.0.10
         run: |
-          sed -i '' 's|<PackageReference Include="Avalonia.iOS" Version="12.1.0" />|<PackageReference Include="Avalonia.iOS" Version="11.0.10" />|g' OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj
+          echo "=== Before modification ==="
+          grep -n "Avalonia.iOS" OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj || echo "Pattern not found"
+
+          # 使用 perl 进行稳健的文本替换（macOS 默认自带 perl）
+          perl -pi -e 's/<PackageReference Include="Avalonia\.iOS" Version="[^"]*" \/>/<PackageReference Include="Avalonia.iOS" Version="11.0.10" \/>/g' OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj
+
+          echo "=== After modification ==="
+          grep -n "Avalonia.iOS" OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj || echo "Pattern not found"
+      # -----------------------------------------------------------
 
       - name: Restore dependencies (iOS only)
         run: dotnet restore OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj -p:TargetFramework=net9.0-ios
