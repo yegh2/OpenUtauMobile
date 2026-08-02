@@ -25,7 +25,7 @@ jobs:
       - name: Install MAUI iOS workload
         run: dotnet workload install maui-ios
 
-      # 统一目标框架为 net10.0-ios
+      # 缁熶竴鐩爣妗嗘灦涓?net10.0-ios
       - name: Unify target frameworks
         run: |
           projects=(
@@ -47,30 +47,15 @@ jobs:
       - name: Restore dependencies (iOS only)
         run: dotnet restore OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj -p:TargetFramework=net10.0-ios
 
-      # 查找 Avalonia 任务程序集的精确路径
-      - name: Find Avalonia build tasks assembly
-        id: find_avalonia_tasks
-        run: |
-          AVALONIA_TASKS_DLL=$(find /Users/runner/.nuget/packages/avalonia -name "Avalonia.Build.Tasks.dll" | head -1)
-          if [ -z "$AVALONIA_TASKS_DLL" ]; then
-            echo "Error: Avalonia.Build.Tasks.dll not found"
-            exit 1
-          fi
-          AVALONIA_TASKS_DIR=$(dirname "$AVALONIA_TASKS_DLL")
-          echo "tasks_dir=$AVALONIA_TASKS_DIR" >> $GITHUB_OUTPUT
-          echo "Found tasks at: $AVALONIA_TASKS_DIR"
-
-      # 构建并发布 IPA（使用查找到的精确路径）
+      # Avalonia 12.x 鍖呰嚜甯?AvaloniaBuildTasksLocation 榛樿鍊?      # 锛坆uildTransitive/Avalonia.props 鎸囧悜 tools/netstandard2.0/Avalonia.Build.Tasks.dll锛夛紝
+      # 鎵嬪姩瑕嗙洊鍙嶈€屼細鐮村潖浠诲姟鍔犺浇锛屾晠涓嶅啀浼犺鍙傛暟
       - name: Build .app without signing
         run: |
-          AVALONIA_TASKS_DIR="${{ steps.find_avalonia_tasks.outputs.tasks_dir }}"
           dotnet publish OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj \
             -f net10.0-ios \
             -c Debug \
             -p:EnableCodeSigning=false \
             -p:RuntimeIdentifier=ios-arm64 \
-            -p:TargetFrameworks=net10.0-ios \
-            -p:AvaloniaBuildTasksLocation="$AVALONIA_TASKS_DIR/" \
             -o ./output
 
       - name: Package .app into unsigned .ipa
