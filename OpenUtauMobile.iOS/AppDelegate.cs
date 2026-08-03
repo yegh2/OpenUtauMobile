@@ -25,9 +25,9 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
 {
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); // 娉ㄥ唽缂栫爜鎻愪緵绋嬪簭浠ユ敮鎸佹洿澶氱紪鐮佹牸寮?
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); // 注册编码提供程序以支持更多编码格式
         InitLogging();
-        ServiceHub.InitAudioOutput = InitAudioOutput; // iOS: AVAudioEngine 闊抽鍚庣
+        ServiceHub.InitAudioOutput = InitAudioOutput; // iOS: AVAudioEngine 音频后端
         ServiceHub.TryGetPlatformAccentFallback = TryGetPlatformAccentFallback;
         return base.CustomizeAppBuilder(builder)
             .UseReactiveUI(_ =>
@@ -38,15 +38,15 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
     private static void InitAudioOutput()
     {
         string pref = OpenUtau.Core.Util.Preferences.Default.AudioBackend;
-        Log.Information("鍒濆鍖栭煶棰戣緭鍑猴紝鍋忓ソ鍚庣: {Backend}", string.IsNullOrEmpty(pref) ? "Auto" : pref);
+        Log.Information("初始化音频输出，偏好后端: {Backend}", string.IsNullOrEmpty(pref) ? "Auto" : pref);
         try
         {
             PlaybackManager.Inst.AudioOutput = new Audio.IOSAudioOutput();
-            Log.Information("浣跨敤 AVAudioEngine 闊抽鍚庣");
+            Log.Information("使用 AVAudioEngine 音频后端");
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "IOSAudioOutput 鍒濆鍖栧け璐ワ紝鍥為€€鍒?Dummy");
+            Log.Error(ex, "IOSAudioOutput 初始化失败，回退到 Dummy");
             PlaybackManager.Inst.AudioOutput = new DummyAudioOutput();
         }
     }
@@ -58,18 +58,18 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
             .WriteTo.Debug()
             .WriteTo.Logger(lc => lc
                 .MinimumLevel.Information() // 
-                .WriteTo.File(PathManager.Inst.LogFilePath, rollingInterval: RollingInterval.Day, encoding: Encoding.UTF8)) // 鍐欏叆鏃ュ織鏂囦欢
+                .WriteTo.File(PathManager.Inst.LogFilePath, rollingInterval: RollingInterval.Day, encoding: Encoding.UTF8)) // 写入日志文件
             .CreateLogger();
         AppDomain.CurrentDomain.UnhandledException += (_, args) => {
-            Log.Error((Exception)args.ExceptionObject, "鏈粡澶勭悊鐨勫紓甯革紒"); // 鏈鐞嗗紓甯?
+            Log.Error((Exception)args.ExceptionObject, "未经处理的异常！"); // 未处理异常
             DocManager.Inst.ExecuteCmd(new ErrorMessageNotification((Exception)args.ExceptionObject));
         };
         TaskScheduler.UnobservedTaskException += (_, args) => {
-            Log.Error(args.Exception, "鏈瀵熷埌鐨?Task 寮傚父锛?); // 鏈瀵熷埌鐨?Task 寮傚父
+            Log.Error(args.Exception, "未观察到的 Task 异常！"); // 未观察到的 Task 异常
             DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(args.Exception));
             args.SetObserved();
         };
-        Log.Information("==========寮€濮嬭褰曟棩蹇?=========");
+        Log.Information("==========开始记录日志==========");
     }
 
     private static (bool success, Color color, string source) TryGetPlatformAccentFallback()
