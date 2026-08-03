@@ -100,7 +100,7 @@ jobs:
           echo "== build static lib =="
           WORLDLINE_SRC=/tmp/worldline-src PATCH_DIR=/tmp/patches bash ${{ github.workspace }}/scripts/build_worldline_ios.sh
           echo "== inject NativeReference =="
-          sed -i '' 's|</Project>|<ItemGroup><NativeReference Include="/tmp/worldline-ios/out/libworldline.a"><Kind>Static</Kind><IsCxx>True</IsCxx><SmartLink>True</SmartLink></NativeReference></ItemGroup></Project>|' OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj
+          sed -i '' 's|</Project>|<ItemGroup><NativeReference Include="/tmp/worldline-ios/out/libworldline.a"><Kind>Static</Kind><IsCxx>True</IsCxx><SmartLink>True</SmartLink></NativeReference></ItemGroup></Project>|' ${{ github.workspace }}/OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj
           echo "injected worldline NativeReference"
 
           echo "injected NativeReference into iOS csproj"
