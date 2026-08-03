@@ -39,7 +39,8 @@ namespace OpenUtauMobile.iOS.Audio
                 _engine = new AVAudioEngine();
                 _playerNode = new AVAudioPlayerNode();
                 _engine.AttachNode(_playerNode);
-                _format = new AVAudioFormat(SampleRate, Channels, false); // deinterleaved float32
+                // AVAudioFormat(double sampleRate, uint channels) -> deinterleaved float32
+                _format = new AVAudioFormat(SampleRate, Channels);
                 _engine.Connect(_playerNode, _engine.MainMixerNode, _format);
 
                 var session = AVAudioSession.SharedInstance();
@@ -69,9 +70,15 @@ namespace OpenUtauMobile.iOS.Audio
 
             try
             {
+                NSError? error = null;
+                if (!_engine.StartAndReturnError(out error))
+                {
+                    Log.Error("AVAudioEngine start failed: {Error}", error?.LocalizedDescription ?? "unknown");
+                    _isPlaying = false;
+                    return;
+                }
                 _isPlaying = true;
                 _positionSamples = 0;
-                _engine.Start();
                 _playerNode.Play();
                 _playbackThread = new Thread(PlaybackLoop);
                 _playbackThread.Start();
@@ -111,7 +118,7 @@ namespace OpenUtauMobile.iOS.Audio
 
         /// <summary>
         /// Core playback loop: read float samples from provider, convert to
-        /// deinterleaved AVAudioPCMBuffer, schedule on the player node.
+        /// deinterleaved AVAudioPcmBuffer, schedule on the player node.
         /// </summary>
         private void PlaybackLoop()
         {
@@ -135,32 +142,37 @@ namespace OpenUtauMobile.iOS.Audio
                 int frames = samplesRead / Channels;
                 if (samplesRead % Channels != 0) frames++;
 
-                var pcmBuffer = new AVAudioPCMBuffer(_format, (uint)frames);
+                var pcmBuffer = new AVAudioPcmBuffer(_format, (uint)frames);
                 pcmBuffer.FrameLength = (uint)frames;
 
                 // Copy interleaved float data into deinterleaved channel buffers.
-                unsafe
+                if (pcmBuffer.FloatChannelData != null && pcmBuffer.FloatChannelData.Length >= Channels)
                 {
-                    float* ch0 = (float*)pcmBuffer.FloatChannelData[0].ToPointer();
-                    float* ch1 = (float*)pcmBuffer.FloatChannelData[1].ToPointer();
-                    for (int i = 0; i < frames; i++)
+                    unsafe
                     {
-                        int src = i * Channels;
-                        float l = src < samplesRead ? interleaved[src] : 0f;
-                        float r = (src + 1) < samplesRead ? interleaved[src + 1] : 0f;
-                        ch0[i] = l;
-                        ch1[i] = r;
+                        float* ch0 = (float*)pcmBuffer.FloatChannelData[0].ToPointer();
+                        float* ch1 = (float*)pcmBuffer.FloatChannelData[1].ToPointer();
+                        for (int i = 0; i < frames; i++)
+                        {
+                            int src = i * Channels;
+                            float l = src < samplesRead ? interleaved[src] : 0f;
+                            float r = (src + 1) < samplesRead ? interleaved[src + 1] : 0f;
+                            ch0[i] = l;
+                            ch1[i] = r;
+                        }
                     }
                 }
 
                 _positionSamples += frames;
-                _playerNode.ScheduleBuffer(pcmBuffer, AVAudioPlayerNodeBufferOptions.Interrupts, null);
+                _playerNode.ScheduleBuffer(pcmBuffer, null);
             }
 
             if (eof)
             {
                 // Let the tail play out, then stop.
-                _playerNode.ScheduleBuffer(new AVAudioPCMBuffer(_format, 0), AVAudioPlayerNodeBufferOptions.Interrupts, () =>
+                var tail = new AVAudioPcmBuffer(_format, 0);
+                tail.FrameLength = 0;
+                _playerNode.ScheduleBuffer(tail, () =>
                 {
                     _isPlaying = false;
                     _playerNode.Stop();
