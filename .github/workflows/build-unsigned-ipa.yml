@@ -88,7 +88,13 @@ jobs:
         run: |
           set -e
           echo "== fetch worldline C++ sources and patches =="
-          git clone --depth 1 --filter=blob:none --sparse https://github.com/openutau/OpenUtau.git /tmp/openutau
+          for i in 1 2 3 4 5; do
+            git clone --depth 1 --filter=blob:none --sparse https://github.com/openutau/OpenUtau.git /tmp/openutau && break
+            echo "clone attempt $i failed (DNS/network), retrying in 5s..."
+            sleep 5
+            rm -rf /tmp/openutau
+          done
+          [ -d /tmp/openutau ] || { echo "failed to clone openutau/OpenUtau after 5 attempts"; exit 1; }
           cd /tmp/openutau
           git sparse-checkout set cpp/worldline cpp/third_party
           cp -R cpp/worldline /tmp/worldline-src
