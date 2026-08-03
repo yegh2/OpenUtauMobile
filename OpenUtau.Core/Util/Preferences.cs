@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using Newtonsoft.Json;
 using OpenUtau.Core.Render;
@@ -31,7 +32,16 @@ namespace OpenUtau.Core.Util {
             Default = new SerializablePreferences();
             try
             {
-                string exePath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+                string exePath = null;
+                if (OS.IsIOS()) {
+                    // iOS: Process.MainModule is not supported; prefs-default.json is bundled in the app root.
+                    exePath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+                    if (string.IsNullOrEmpty(exePath)) {
+                        exePath = PathManager.Inst.RootPath;
+                    }
+                } else {
+                    exePath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+                }
                 string shippedPrefsPath = Path.Combine(exePath, "prefs-default.json");
                 if (File.Exists(shippedPrefsPath)) {
                     var shippedPrefs = JsonConvert.DeserializeObject<SerializablePreferences>(
