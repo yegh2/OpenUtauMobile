@@ -111,6 +111,7 @@ compile_cpp() { # src
   "$CLANGXX" $CXXFLAGS \
     -I"$WORK/src" \
     -I"$WORLD_SRC" \
+    -I"$WORLD_SRC/tools" \
     -I"$SPLINE_SRC" \
     -I"$PYIN_SRC" \
     -I"$WORK/deps" \
@@ -143,7 +144,7 @@ for f in "$WORK/src/worldline"/worldline.cpp "$WORK/src/worldline"/phrase_synth.
 done
 
 # WORLD vocoder
-for f in "$WORLD_SRC"/*.cpp; do
+for f in "$WORLD_SRC"/*.cpp "$WORLD_SRC"/tools/audioio.cpp; do
   compile_cpp "$f"
 done
 
