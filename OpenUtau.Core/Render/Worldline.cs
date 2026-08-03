@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,7 +17,15 @@ namespace OpenUtau.Core.Render {
     public class CutOffBeforeOffsetError : SynthRequestError { }
 
     public static class Worldline {
-        [DllImport("worldline", CallingConvention = CallingConvention.Cdecl)]
+#if IOS
+        // iOS bundles worldline as a statically linked library (NativeReference).
+        // DllImport must use "__Internal" to resolve symbols from the static lib.
+        const string NativeLib = "__Internal";
+#else
+        const string NativeLib = "worldline";
+#endif
+
+        [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl)]
         static extern int F0(
             float[] samples, int length, int fs, double framePeriod, int method, ref IntPtr f0);
 
@@ -36,7 +44,7 @@ namespace OpenUtau.Core.Render {
             }
         }
 
-        [DllImport("worldline", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl)]
         static extern int DecodeMgc(
             int f0Length, double[] mgc, int mgcSize,
             int fftSize, int fs, ref IntPtr spectrogram);
@@ -60,7 +68,7 @@ namespace OpenUtau.Core.Render {
             }
         }
 
-        [DllImport("worldline", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl)]
         static extern int DecodeBap(
             int f0Length, double[] bap,
             int fftSize, int fs, ref IntPtr aperiodicity);
@@ -92,7 +100,7 @@ namespace OpenUtau.Core.Render {
             public double frame_ms;
         };
 
-        [DllImport("worldline", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl)]
         static extern void InitAnalysisConfig(ref AnalysisConfig config,
             int fs, int hop_size, int fft_size);
 
@@ -102,7 +110,7 @@ namespace OpenUtau.Core.Render {
             return config;
         }
 
-        [DllImport("worldline", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl)]
         static extern unsafe void WorldAnalysis(
             ref AnalysisConfig config, float[] samples, int num_samples,
             double** f0_out, double** sp_env_out, double** ap_out,
@@ -134,7 +142,7 @@ namespace OpenUtau.Core.Render {
             Marshal.FreeCoTaskMem(new IntPtr(apPtr));
         }
 
-        [DllImport("worldline", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl)]
         static extern unsafe void WorldAnalysisF0In(
             ref AnalysisConfig config, float[] samples, int num_samples,
             double[] f0_in, int num_frames, double* sp_env_out, double* ap_out);
@@ -148,7 +156,7 @@ namespace OpenUtau.Core.Render {
                 spEnv.Data<double>().Address, ap.Data<double>().Address);
         }
 
-        [DllImport("worldline", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl)]
         static extern int WorldSynthesis(
             double[] f0, int f0Length,
             double[,] mgcOrSp, bool isMgc, int mgcSize,
@@ -179,7 +187,7 @@ namespace OpenUtau.Core.Render {
             }
         }
 
-        [DllImport("worldline", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl)]
         static extern int WorldSynthesis(
             double[] f0, int f0Length,
             double[] mgcOrSp, bool isMgc, int mgcSize,
@@ -349,7 +357,7 @@ namespace OpenUtau.Core.Render {
             }
         }
 
-        [DllImport("worldline")]
+        [DllImport(NativeLib)]
         static extern int Resample(IntPtr request, ref IntPtr y);
 
         public static float[] Resample(ResamplerItem item) {
@@ -372,26 +380,26 @@ namespace OpenUtau.Core.Render {
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         delegate void LogCallback(string log);
 
-        [DllImport("worldline")]
+        [DllImport(NativeLib)]
         static extern IntPtr PhraseSynthNew();
 
-        [DllImport("worldline")]
+        [DllImport(NativeLib)]
         static extern void PhraseSynthDelete(IntPtr phrase_synth);
 
-        [DllImport("worldline")]
+        [DllImport(NativeLib)]
         static extern void PhraseSynthAddRequest(
             IntPtr phrase_synth, IntPtr request,
             double posMs, double skipMs, double lengthMs,
             double fadeInMs, double fadeOutMs, LogCallback logCallback);
 
-        [DllImport("worldline")]
+        [DllImport(NativeLib)]
         static extern void PhraseSynthSetCurves(
             IntPtr phraseSynth, double[] f0,
             double[] gender, double[] tension,
             double[] breathiness, double[] voicing,
             int length, LogCallback logCallback);
 
-        [DllImport("worldline")]
+        [DllImport(NativeLib)]
         static extern int PhraseSynthSynth(
             IntPtr phrase_synth,
             ref IntPtr y, LogCallback logCallback);
