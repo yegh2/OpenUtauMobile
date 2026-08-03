@@ -14,13 +14,17 @@ namespace OpenUtauMobile.iOS.Audio
 {
     /// <summary>
     /// iOS audio output backend using AVAudioEngine + AVAudioPlayerNode.
-    /// Pulls samples from an NAudio ISampleProvider and schedules PCM buffers.
+    /// Pulls samples from an NAudio ISampleProvider and schedules PCM buffers,
+    /// throttled to keep the scheduled-but-unplayed queue bounded so
+    /// GetPosition() tracks the actual playback position (not the scheduled one).
     /// </summary>
     public class IOSAudioOutput : IAudioOutput
     {
         private const int SampleRate = 44100;
         private const int Channels = 2;
         private const int BufferFrames = 4096;
+        // Keep at most ~1.5s of scheduled-but-unplayed audio.
+        private const int MaxPendingFrames = SampleRate * 3 / 2;
 
         private AVAudioEngine? _engine;
         private AVAudioPlayerNode? _playerNode;
@@ -28,7 +32,7 @@ namespace OpenUtauMobile.iOS.Audio
         private ISampleProvider? _sampleProvider;
         private Thread? _playbackThread;
         private volatile bool _isPlaying;
-        private long _positionSamples;
+        private long _scheduledFrames;
 
         public PlaybackState PlaybackState => _isPlaying ? PlaybackState.Playing : PlaybackState.Stopped;
         public int DeviceNumber { get; set; }
@@ -75,11 +79,10 @@ namespace OpenUtauMobile.iOS.Audio
                 if (!_engine.StartAndReturnError(out error))
                 {
                     Log.Error("AVAudioEngine start failed: {Error}", error?.LocalizedDescription ?? "unknown");
-                    _isPlaying = false;
                     return;
                 }
                 _isPlaying = true;
-                _positionSamples = 0;
+                _scheduledFrames = 0;
                 _playerNode.Play();
                 _playbackThread = new Thread(PlaybackLoop);
                 _playbackThread.Start();
@@ -108,7 +111,14 @@ namespace OpenUtauMobile.iOS.Audio
             _engine?.Stop();
         }
 
-        public long GetPosition() => _positionSamples;
+        /// <summary>
+        /// Playback position in bytes (stereo float samples * 4), matching the
+        /// convention used by PlaybackManager.UpdatePlayPos().
+        /// </summary>
+        public long GetPosition()
+        {
+            return GetPlayedFrames() * sizeof(float);
+        }
 
         public List<AudioOutputDevice> GetOutputDevices() => new List<AudioOutputDevice>();
 
@@ -118,8 +128,29 @@ namespace OpenUtauMobile.iOS.Audio
         }
 
         /// <summary>
+        /// Actual frames rendered by the player node (0 if not available yet).
+        /// </summary>
+        private long GetPlayedFrames()
+        {
+            try
+            {
+                if (_playerNode == null) return 0;
+                var nodeTime = _playerNode.LastRenderTime;
+                if (nodeTime == null) return 0;
+                var playerTime = _playerNode.GetPlayerTimeFromNodeTime(nodeTime);
+                if (playerTime == null) return 0;
+                return Math.Max(0, playerTime.SampleTime);
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        /// <summary>
         /// Core playback loop: read float samples from provider, convert to
         /// deinterleaved AVAudioPcmBuffer, schedule on the player node.
+        /// Throttles so GetPlayedFrames() stays meaningful (bounded queue).
         /// </summary>
         private void PlaybackLoop()
         {
@@ -134,6 +165,12 @@ namespace OpenUtauMobile.iOS.Audio
 
             while (_isPlaying && !eof)
             {
+                // Throttle: don't schedule too far ahead of what's been rendered.
+                while (_isPlaying && (_scheduledFrames - GetPlayedFrames()) > MaxPendingFrames)
+                {
+                    Thread.Sleep(20);
+                }
+
                 int samplesRead = _sampleProvider.Read(interleaved, 0, interleaved.Length);
                 if (samplesRead <= 0)
                 {
@@ -166,7 +203,7 @@ namespace OpenUtauMobile.iOS.Audio
                     }
                 }
 
-                _positionSamples += frames;
+                _scheduledFrames += frames;
                 _playerNode.ScheduleBuffer(pcmBuffer, null);
             }
 
