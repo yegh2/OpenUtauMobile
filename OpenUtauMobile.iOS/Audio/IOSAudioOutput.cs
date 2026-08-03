@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Threading;
 using AVFoundation;
 using Foundation;
@@ -146,12 +147,14 @@ namespace OpenUtauMobile.iOS.Audio
                 pcmBuffer.FrameLength = (uint)frames;
 
                 // Copy interleaved float data into deinterleaved channel buffers.
-                if (pcmBuffer.FloatChannelData != null && pcmBuffer.FloatChannelData.Length >= Channels)
+                // FloatChannelData is a float** (pointer to per-channel float arrays).
+                var channelsPtr = (IntPtr)pcmBuffer.FloatChannelData;
+                if (channelsPtr != IntPtr.Zero)
                 {
                     unsafe
                     {
-                        float* ch0 = (float*)pcmBuffer.FloatChannelData[0].ToPointer();
-                        float* ch1 = (float*)pcmBuffer.FloatChannelData[1].ToPointer();
+                        float* ch0 = (float*)Marshal.ReadIntPtr(channelsPtr, 0);
+                        float* ch1 = (float*)Marshal.ReadIntPtr(channelsPtr, IntPtr.Size);
                         for (int i = 0; i < frames; i++)
                         {
                             int src = i * Channels;
