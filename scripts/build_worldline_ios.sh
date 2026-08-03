@@ -110,7 +110,7 @@ OBJS=()
 compile_cpp() { # src
   local src="$1"; local name
   name=$(echo "$src" | md5 -q | cut -c1-10)
-  "$CLANGXX" $CXXFLAGS \
+  "$CLANGXX" $CXXFLAGS -DFP_TYPE=double \
     -I"$WORK/src" \
     -I"$WORLD_SRC" \
     -I"$WORLD_TOOLS" \
