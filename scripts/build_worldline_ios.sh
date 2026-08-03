@@ -24,7 +24,9 @@ echo "== downloading dependencies =="
 # WORLD vocoder (mmorise/World)
 curl -sL -o /tmp/world.zip https://github.com/mmorise/World/archive/f8dd5fb289db6a7f7f704497752bf32b258f9151.zip
 unzip -q /tmp/world.zip -d "$WORK/deps"
-WORLD_SRC="$WORK/deps/World-f8dd5fb289db6a7f7f704497752bf32b258f9151/src"
+WORLD_ROOT="$WORK/deps/World-f8dd5fb289db6a7f7f704497752bf32b258f9151"
+WORLD_SRC="$WORLD_ROOT/src"
+WORLD_TOOLS="$WORLD_ROOT/tools"
 
 # spline (ttk592/spline)
 curl -sL -o /tmp/spline.zip https://github.com/ttk592/spline/archive/5894beaf91e9adbfdbe5c6c9a1c60770e380e8e8.zip
@@ -111,7 +113,7 @@ compile_cpp() { # src
   "$CLANGXX" $CXXFLAGS \
     -I"$WORK/src" \
     -I"$WORLD_SRC" \
-    -I"$WORLD_SRC/tools" \
+    -I"$WORLD_TOOLS" \
     -I"$SPLINE_SRC" \
     -I"$PYIN_SRC" \
     -I"$WORK/deps" \
@@ -144,7 +146,7 @@ for f in "$WORK/src/worldline"/worldline.cpp "$WORK/src/worldline"/phrase_synth.
 done
 
 # WORLD vocoder
-for f in "$WORLD_SRC"/*.cpp "$WORLD_SRC"/tools/audioio.cpp; do
+for f in "$WORLD_SRC"/*.cpp "$WORLD_TOOLS"/audioio.cpp; do
   compile_cpp "$f"
 done
 
