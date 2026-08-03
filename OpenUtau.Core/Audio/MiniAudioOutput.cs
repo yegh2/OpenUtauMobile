@@ -19,6 +19,8 @@ namespace OpenUtau.Audio {
         public void Play() { }
         public void Pause() { }
         public void Stop() { }
+        public long GetPosition() => 0;
+        public List<AudioOutputDevice> GetOutputDevices() => new List<AudioOutputDevice>();
         public void Dispose() { }
     }
 #else
