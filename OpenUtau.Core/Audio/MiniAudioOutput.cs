@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using NAudio.Wave;
@@ -7,6 +7,21 @@ using OpenUtau.Core.Util;
 using Serilog;
 
 namespace OpenUtau.Audio {
+#if IOS
+    // MiniAudio (worldline audio_output) is not available on iOS.
+    // Audio playback on iOS goes through the platform audio backend instead.
+    public class MiniAudioOutput : IAudioOutput, IDisposable {
+        public PlaybackState PlaybackState => PlaybackState.Stopped;
+        public int DeviceNumber => -1;
+        public void UpdateDeviceList() { }
+        public void SelectDevice(Guid guid, int deviceNumber) { }
+        public void Init(ISampleProvider sampleProvider) { }
+        public void Play() { }
+        public void Pause() { }
+        public void Stop() { }
+        public void Dispose() { }
+    }
+#else
     public class MiniAudioOutput : IAudioOutput, IDisposable {
         const int channels = 2;
         const int sampleRate = 44100;
@@ -258,4 +273,5 @@ namespace OpenUtau.Audio {
 
         #endregion
     }
+#endif
 }
