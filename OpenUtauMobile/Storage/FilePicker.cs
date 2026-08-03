@@ -27,7 +27,7 @@ public static class FilePicker
     private static bool CheckAndRequestStoragePermission()
     {
         if (OperatingSystem.IsIOS()) return true; // iOS sandbox needs no external storage permission
-    {
+
         IExternalStorageService? service = ServiceHub.ExternalStorageService;
         if (service == null) return false;
         if (!service.HasManageExternalStoragePermissionAsync())
