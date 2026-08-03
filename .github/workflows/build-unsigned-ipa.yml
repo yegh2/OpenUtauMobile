@@ -80,6 +80,29 @@ jobs:
           echo "stub lib built:"
           nm /tmp/libonnx_stub.a
           sed -i '' 's|</Project>|<ItemGroup><NativeReference Include="/tmp/libonnx_stub.a"><Kind>Static</Kind><IsCxx>True</IsCxx><SmartLink>True</SmartLink></NativeReference></ItemGroup></Project>|' OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj
+
+      # worldline (OpenUtau C++ resampler) has no prebuilt iOS binary. Cross-compile
+      # it as a static library and link it via NativeReference (like OnnxRuntime).
+      # DllImport(NativeLib) in Worldline.cs resolves to __Internal on iOS.
+      - name: Build worldline static lib for iOS
+        run: |
+          set -e
+          echo "== fetch worldline C++ sources and patches =="
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/openutau/OpenUtau.git /tmp/openutau
+          cd /tmp/openutau
+          git sparse-checkout set cpp/worldline cpp/third_party
+          cp -R cpp/worldline /tmp/worldline-src
+          mkdir -p /tmp/patches
+          cp cpp/third_party/world.patch cpp/third_party/libpyin.patch cpp/third_party/spline.patch /tmp/patches/
+          cd /tmp/worldline-src
+          rm -f worldline_main.cpp worldline_test.cpp audio_debug.cpp audio_output.cpp audio_output.h
+          rm -rf classic/timing_test.cpp f0/*_test.cpp 2>/dev/null || true
+          echo "== build static lib =="
+          WORLDLINE_SRC=/tmp/worldline-src PATCH_DIR=/tmp/patches bash ${{ github.workspace }}/scripts/build_worldline_ios.sh
+          echo "== inject NativeReference =="
+          sed -i '' 's|</Project>|<ItemGroup><NativeReference Include="/tmp/worldline-ios/out/libworldline.a"><Kind>Static</Kind><IsCxx>True</IsCxx><SmartLink>True</SmartLink></NativeReference></ItemGroup></Project>|' OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj
+          echo "injected worldline NativeReference"
+
           echo "injected NativeReference into iOS csproj"
 
       # Avalonia 12.x ships a correct default for AvaloniaBuildTasksLocation
@@ -107,3 +130,4 @@ jobs:
         with:
           name: OpenUtauMobile-unsigned-ipa
           path: OpenUtauMobile-unsigned.ipa
+
