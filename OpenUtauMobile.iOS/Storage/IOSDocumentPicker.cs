@@ -51,15 +51,18 @@ public static class IOSDocumentPicker
                     _activeDelegate = null;
                     if (urls == null || urls.Length == 0)
                     {
+                        Log.Information("IOSDocumentPicker: 文件选择已取消");
                         tcs.TrySetResult(string.Empty);
                     }
                     else
                     {
+                        Log.Information("IOSDocumentPicker: 选中文件 {Path}", urls[0].Path ?? "<no path>");
                         tcs.TrySetResult(urls[0].Path ?? string.Empty);
                     }
                 });
                 picker.Delegate = _activeDelegate;
                 Present(picker);
+                Log.Information("IOSDocumentPicker: 文件选择器已弹出 (filters={Filters})", string.Join(",", filters ?? Array.Empty<string>()));
             }
             catch (Exception ex)
             {
@@ -98,15 +101,18 @@ public static class IOSDocumentPicker
                     _activeDelegate = null;
                     if (urls == null || urls.Length == 0)
                     {
+                        Log.Information("IOSDocumentPicker: 文件夹选择已取消");
                         tcs.TrySetResult(string.Empty);
                     }
                     else
                     {
+                        Log.Information("IOSDocumentPicker: 选中文件夹 {Path}", urls[0].Path ?? "<no path>");
                         tcs.TrySetResult(urls[0].Path ?? string.Empty);
                     }
                 });
                 picker.Delegate = _activeDelegate;
                 Present(picker);
+                Log.Information("IOSDocumentPicker: 文件夹选择器已弹出");
             }
             catch (Exception ex)
             {

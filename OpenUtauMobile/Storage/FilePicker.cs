@@ -6,6 +6,7 @@ using Avalonia.Threading;
 using OpenUtauMobile.Controls;
 using OpenUtauMobile.Services;
 using OpenUtauMobile.ViewModels;
+using Serilog;
 
 namespace OpenUtauMobile.Storage;
 
@@ -69,9 +70,15 @@ public static class FilePicker
         // 选完拷贝进沙盒保证后续可读且跨会话可用。
         if (OperatingSystem.IsIOS() && ServiceHub.PickFileAsync != null)
         {
+            Log.Information("FilePicker: iOS 原生选择文件, title={Title}, filters={Filters}", title, string.Join(",", filters));
             string picked = await ServiceHub.PickFileAsync(title, filters);
+            Log.Information("FilePicker: iOS 选择结果={Picked}", string.IsNullOrEmpty(picked) ? "<empty>" : picked);
             if (string.IsNullOrEmpty(picked)) return string.Empty;
             return ServiceHub.ImportFileToSandbox?.Invoke(picked) ?? picked;
+        }
+        if (OperatingSystem.IsIOS())
+        {
+            Log.Warning("FilePicker: iOS 但 ServiceHub.PickFileAsync 未接线，走 Avalonia provider");
         }
 
         IStorageProvider? storageProvider = StorageProviderFactory.GetStorageProvider();
@@ -121,7 +128,9 @@ public static class FilePicker
         // iOS：原生文件夹选择器 + 整体拷进沙盒（如音源目录）。
         if (OperatingSystem.IsIOS() && ServiceHub.PickFolderAsync != null)
         {
+            Log.Information("FilePicker: iOS 原生选择文件夹, title={Title}", title);
             string picked = await ServiceHub.PickFolderAsync(title);
+            Log.Information("FilePicker: iOS 文件夹结果={Picked}", string.IsNullOrEmpty(picked) ? "<empty>" : picked);
             if (string.IsNullOrEmpty(picked)) return string.Empty;
             return ServiceHub.ImportFolderToSandbox?.Invoke(picked) ?? picked;
         }
@@ -169,7 +178,9 @@ public static class FilePicker
         // 写入完成后调用 <see cref="ReleaseSaveAccess"/> 释放。
         if (OperatingSystem.IsIOS() && ServiceHub.SaveFileAsync != null)
         {
+            Log.Information("FilePicker: iOS 原生保存对话框, title={Title}", title);
             string picked = await ServiceHub.SaveFileAsync(title, extension, defaultFileName);
+            Log.Information("FilePicker: iOS 保存结果={Picked}", string.IsNullOrEmpty(picked) ? "<empty>" : picked);
             if (string.IsNullOrEmpty(picked)) return string.Empty;
             return ServiceHub.PrepareSaveDestination?.Invoke(picked) ?? picked;
         }
