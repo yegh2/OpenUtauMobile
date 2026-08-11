@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using CoreFoundation;
 using Foundation;
@@ -22,6 +23,7 @@ public static class IOSDocumentPicker
     private static UIDocumentPickerDelegate? _activeDelegate;
 
     /// <summary>选择单个文件。取消或失败返回空字符串。</summary>
+    [SupportedOSPlatform("ios14.0")]
     public static Task<string> PickFileAsync(string title, string[] filters)
     {
         var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -29,6 +31,13 @@ public static class IOSDocumentPicker
         {
             try
             {
+                if (!OperatingSystem.IsIOSVersionAtLeast(14))
+                {
+                    Log.Warning("IOSDocumentPicker: 系统文件选择器需要 iOS 14+");
+                    tcs.TrySetResult(string.Empty);
+                    return;
+                }
+
                 UTType[] allowed = ToUttTypes(filters);
                 var picker = new UIDocumentPickerViewController(allowed, false);
                 picker.Title = title;
@@ -62,6 +71,7 @@ public static class IOSDocumentPicker
     }
 
     /// <summary>选择文件夹。取消或失败返回空字符串。</summary>
+    [SupportedOSPlatform("ios14.0")]
     public static Task<string> PickFolderAsync(string title)
     {
         var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -69,6 +79,13 @@ public static class IOSDocumentPicker
         {
             try
             {
+                if (!OperatingSystem.IsIOSVersionAtLeast(14))
+                {
+                    Log.Warning("IOSDocumentPicker: 系统文件夹选择器需要 iOS 14+");
+                    tcs.TrySetResult(string.Empty);
+                    return;
+                }
+
                 var picker = new UIDocumentPickerViewController(new[] { UTTypes.Folder }, false);
                 picker.Title = title;
                 if (OperatingSystem.IsIOSVersionAtLeast(11))
@@ -105,6 +122,7 @@ public static class IOSDocumentPicker
     /// 返回用户选择的目标路径（沙盒外），调用方需配合 IOSFileAccess.PrepareSavePath 授权后写入。
     /// 取消或失败返回空字符串。
     /// </summary>
+    [SupportedOSPlatform("ios14.0")]
     public static Task<string> SaveFileAsync(string title, string extension, string defaultFileName)
     {
         var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -113,6 +131,13 @@ public static class IOSDocumentPicker
             NSUrl? tempDir = null;
             try
             {
+                if (!OperatingSystem.IsIOSVersionAtLeast(14))
+                {
+                    Log.Warning("IOSDocumentPicker: 系统保存对话框需要 iOS 14+");
+                    tcs.TrySetResult(string.Empty);
+                    return;
+                }
+
                 string ext = extension.StartsWith('.') ? extension : "." + extension;
                 string fileName = string.IsNullOrEmpty(defaultFileName) ? "untitled" : defaultFileName;
                 if (!fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
@@ -173,11 +198,12 @@ public static class IOSDocumentPicker
         return tcs.Task;
     }
 
+    [SupportedOSPlatform("ios14.0")]
     private static UTType[] ToUttTypes(string[] filters)
     {
         if (filters == null || filters.Length == 0)
         {
-            return new[] { UTType.Data };
+            return new[] { UTTypes.Data };
         }
         UTType[] types = filters
             .Select(f => f.TrimStart('*', '.'))
@@ -186,7 +212,7 @@ public static class IOSDocumentPicker
             .Where(t => t != null)
             .Cast<UTType>()
             .ToArray();
-        return types.Length > 0 ? types : new[] { UTType.Data };
+        return types.Length > 0 ? types : new[] { UTTypes.Data };
     }
 
     private static void Present(UIViewController picker)
