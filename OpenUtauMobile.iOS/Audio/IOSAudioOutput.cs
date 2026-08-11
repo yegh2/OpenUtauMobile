@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using AVFoundation;
+using CoreFoundation;
 using Foundation;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
@@ -33,6 +34,13 @@ namespace OpenUtauMobile.iOS.Audio
         private Thread? _playbackThread;
         private volatile bool _isPlaying;
         private long _scheduledFrames;
+        // Playback run generation: bumped on every Play() so stale completion
+        // handlers from a previous run can never stop a newer run.
+        private long _generation;
+        // Sequence number of the last scheduled buffer of the current run;
+        // only that buffer's completion handler is allowed to stop playback.
+        private long _lastScheduledSeq;
+        private long _scheduledSeq;
 
         public PlaybackState PlaybackState => _isPlaying ? PlaybackState.Playing : PlaybackState.Stopped;
         public int DeviceNumber { get; set; }
@@ -83,8 +91,17 @@ namespace OpenUtauMobile.iOS.Audio
                 }
                 _isPlaying = true;
                 _scheduledFrames = 0;
+                _scheduledSeq = 0;
+                _lastScheduledSeq = 0;
+                _generation++;
+                long generation = _generation;
+                // After a previous run stopped the node, Reset() is required
+                // before scheduling new buffers (otherwise ScheduleBuffer
+                // throws NSInvalidArgumentException and crashes the app).
+                _playerNode.Stop();
+                _playerNode.Reset();
                 _playerNode.Play();
-                _playbackThread = new Thread(PlaybackLoop);
+                _playbackThread = new Thread(() => PlaybackLoop(generation));
                 _playbackThread.Start();
             }
             catch (Exception ex)
@@ -151,8 +168,10 @@ namespace OpenUtauMobile.iOS.Audio
         /// Core playback loop: read float samples from provider, convert to
         /// deinterleaved AVAudioPcmBuffer, schedule on the player node.
         /// Throttles so GetPlayedFrames() stays meaningful (bounded queue).
+        /// The completion handler of the LAST scheduled buffer stops the
+        /// engine once the tail has played out.
         /// </summary>
-        private void PlaybackLoop()
+        private void PlaybackLoop(long generation)
         {
             if (_playerNode == null || _sampleProvider == null || _format == null)
             {
@@ -160,67 +179,108 @@ namespace OpenUtauMobile.iOS.Audio
                 return;
             }
 
-            float[] interleaved = new float[BufferFrames * Channels];
-            bool eof = false;
-
-            while (_isPlaying && !eof)
+            try
             {
-                // Throttle: don't schedule too far ahead of what's been rendered.
-                while (_isPlaying && (_scheduledFrames - GetPlayedFrames()) > MaxPendingFrames)
-                {
-                    Thread.Sleep(20);
-                }
+                float[] interleaved = new float[BufferFrames * Channels];
+                bool eof = false;
 
-                int samplesRead = _sampleProvider.Read(interleaved, 0, interleaved.Length);
-                if (samplesRead <= 0)
+                while (_isPlaying && !eof)
                 {
-                    eof = true;
-                    break;
-                }
-                int frames = samplesRead / Channels;
-                if (samplesRead % Channels != 0) frames++;
-
-                var pcmBuffer = new AVAudioPcmBuffer(_format, (uint)frames);
-                pcmBuffer.FrameLength = (uint)frames;
-
-                // Copy interleaved float data into deinterleaved channel buffers.
-                // FloatChannelData is a float** (pointer to per-channel float arrays).
-                var channelsPtr = (IntPtr)pcmBuffer.FloatChannelData;
-                if (channelsPtr != IntPtr.Zero)
-                {
-                    unsafe
+                    // Throttle: don't schedule too far ahead of what's been rendered.
+                    while (_isPlaying && (_scheduledFrames - GetPlayedFrames()) > MaxPendingFrames)
                     {
-                        float* ch0 = (float*)Marshal.ReadIntPtr(channelsPtr, 0);
-                        float* ch1 = (float*)Marshal.ReadIntPtr(channelsPtr, IntPtr.Size);
-                        for (int i = 0; i < frames; i++)
+                        Thread.Sleep(20);
+                    }
+
+                    int samplesRead = _sampleProvider.Read(interleaved, 0, interleaved.Length);
+                    if (samplesRead <= 0)
+                    {
+                        eof = true;
+                        break;
+                    }
+                    int frames = samplesRead / Channels;
+                    if (samplesRead % Channels != 0) frames++;
+
+                    var pcmBuffer = new AVAudioPcmBuffer(_format, (uint)frames);
+                    pcmBuffer.FrameLength = (uint)frames;
+
+                    // Copy interleaved float data into deinterleaved channel buffers.
+                    // FloatChannelData is a float** (pointer to per-channel float arrays).
+                    var channelsPtr = (IntPtr)pcmBuffer.FloatChannelData;
+                    if (channelsPtr != IntPtr.Zero)
+                    {
+                        unsafe
                         {
-                            int src = i * Channels;
-                            float l = src < samplesRead ? interleaved[src] : 0f;
-                            float r = (src + 1) < samplesRead ? interleaved[src + 1] : 0f;
-                            ch0[i] = l;
-                            ch1[i] = r;
+                            float* ch0 = (float*)Marshal.ReadIntPtr(channelsPtr, 0);
+                            float* ch1 = (float*)Marshal.ReadIntPtr(channelsPtr, IntPtr.Size);
+                            for (int i = 0; i < frames; i++)
+                            {
+                                int src = i * Channels;
+                                float l = src < samplesRead ? interleaved[src] : 0f;
+                                float r = (src + 1) < samplesRead ? interleaved[src + 1] : 0f;
+                                ch0[i] = l;
+                                ch1[i] = r;
+                            }
                         }
                     }
+
+                    _scheduledFrames += frames;
+                    long seq = ++_scheduledSeq;
+                    _playerNode.ScheduleBuffer(pcmBuffer, () => OnBufferCompleted(seq, generation));
                 }
 
-                _scheduledFrames += frames;
-                _playerNode.ScheduleBuffer(pcmBuffer, null);
+                if (eof)
+                {
+                    // Mark the last scheduled buffer as the terminator. The loop
+                    // never schedules a buffer after eof is set, so the buffer
+                    // scheduled right before the eof read is the final one.
+                    _lastScheduledSeq = _scheduledSeq;
+
+                    if (_scheduledSeq == 0)
+                    {
+                        // Nothing was scheduled (empty audio): stop right away.
+                        _isPlaying = false;
+                        _playerNode.Stop();
+                        _engine?.Stop();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "IOSAudioOutput playback loop failed");
+                _isPlaying = false;
+            }
+        }
+
+        /// <summary>
+        /// Called (on an AVAudioEngine internal queue) when a scheduled buffer
+        /// finishes playing. Only the final buffer of the current run stops
+        /// the engine, letting the tail play out naturally.
+        /// </summary>
+        private void OnBufferCompleted(long seq, long generation)
+        {
+            if (generation != _generation || !_isPlaying)
+            {
+                return; // stale completion from a previous run
+            }
+            if (seq != _lastScheduledSeq || _lastScheduledSeq == 0)
+            {
+                return; // not the final buffer yet
             }
 
-            if (eof)
+            try
             {
-                // Let the tail play out, then stop.
-                var tail = new AVAudioPcmBuffer(_format, 0);
-                tail.FrameLength = 0;
-                _playerNode.ScheduleBuffer(tail, () =>
+                DispatchQueue.MainQueue.DispatchAsync(() =>
                 {
                     _isPlaying = false;
-                    _playerNode.Stop();
+                    _playerNode?.Stop();
+                    _playerNode?.Reset();
                     _engine?.Stop();
                 });
             }
-            else
+            catch (Exception ex)
             {
+                Log.Error(ex, "IOSAudioOutput completion handler failed");
                 _isPlaying = false;
             }
         }
