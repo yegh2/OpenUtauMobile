@@ -135,6 +135,8 @@ public class ExportAudioPopupViewModel : PopupViewModelBase
         finally
         {
             IsExporting = false;
+            // iOS: 释放系统选择器保存路径的 security-scoped 授权
+            FilePicker.ReleaseSaveAccess(ExportPath);
         }
 
         if (success)

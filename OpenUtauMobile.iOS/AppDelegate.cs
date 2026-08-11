@@ -29,6 +29,11 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
         InitLogging();
         ServiceHub.InitAudioOutput = InitAudioOutput; // iOS: AVAudioEngine 音频后端
         ServiceHub.TryGetPlatformAccentFallback = TryGetPlatformAccentFallback;
+        // iOS: 系统文件选择器（security-scoped URL）的沙盒导入/保存授权
+        ServiceHub.ImportFileToSandbox = Storage.IOSFileAccess.ImportFileToSandbox;
+        ServiceHub.ImportFolderToSandbox = Storage.IOSFileAccess.ImportFolderToSandbox;
+        ServiceHub.PrepareSaveDestination = Storage.IOSFileAccess.PrepareSavePath;
+        ServiceHub.ReleaseSaveDestination = Storage.IOSFileAccess.ReleaseSavePath;
         return base.CustomizeAppBuilder(builder)
             .UseReactiveUI(_ =>
             {

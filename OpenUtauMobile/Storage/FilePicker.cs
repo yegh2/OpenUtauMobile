@@ -14,8 +14,9 @@ namespace OpenUtauMobile.Storage;
 /// </summary>
 public static class FilePicker
 {
+    // Android 使用内置 UI；iOS 使用系统 UIDocumentPicker（通过 IStorageProvider）；
+    // Windows DEBUG 下用内置 UI 方便调试。
     private static readonly bool UseInternalPicker = OperatingSystem.IsAndroid()
-                                                     || OperatingSystem.IsIOS()
 #if DEBUG
                                                      || OperatingSystem.IsWindows()
 #endif
@@ -81,7 +82,17 @@ public static class FilePicker
 
         IReadOnlyList<IStorageFile> files = await storageProvider.OpenFilePickerAsync(options);
         if (files.Count == 0) return string.Empty;
-        return files[0].TryGetLocalPath() ?? string.Empty;
+        string? path = files[0].TryGetLocalPath();
+        if (string.IsNullOrEmpty(path)) return string.Empty;
+
+        // iOS：系统选择器返回沙盒外的 security-scoped URL，
+        // 拷贝进沙盒保证后续可读且跨会话可用。
+        if (OperatingSystem.IsIOS() && ServiceHub.ImportFileToSandbox != null)
+        {
+            return ServiceHub.ImportFileToSandbox(path);
+        }
+
+        return path;
     }
 
     /// <summary>
@@ -118,7 +129,16 @@ public static class FilePicker
 
         IReadOnlyList<IStorageFolder> folders = await storageProvider.OpenFolderPickerAsync(options);
         if (folders.Count == 0) return string.Empty;
-        return folders[0].TryGetLocalPath() ?? string.Empty;
+        string? path = folders[0].TryGetLocalPath();
+        if (string.IsNullOrEmpty(path)) return string.Empty;
+
+        // iOS：整个文件夹拷进沙盒（如音源目录），保证后续可访问。
+        if (OperatingSystem.IsIOS() && ServiceHub.ImportFolderToSandbox != null)
+        {
+            return ServiceHub.ImportFolderToSandbox(path);
+        }
+
+        return path;
     }
 
     /// <summary>
@@ -155,7 +175,29 @@ public static class FilePicker
             DefaultExtension = ext,
             FileTypeChoices = [new FilePickerFileType("Files") { Patterns = [$"*{ext}"] }],
         });
-        return file?.TryGetLocalPath() ?? string.Empty;
+        if (file is null) return string.Empty;
+        string? path = file.TryGetLocalPath();
+        if (string.IsNullOrEmpty(path)) return string.Empty;
+
+        // iOS：开启 security-scoped 授权，返回可写入路径。
+        // 写入完成后调用 <see cref="ReleaseSaveAccess"/> 释放。
+        if (OperatingSystem.IsIOS() && ServiceHub.PrepareSaveDestination != null)
+        {
+            return ServiceHub.PrepareSaveDestination(path);
+        }
+
+        return path;
+    }
+
+    /// <summary>
+    /// 释放保存路径的访问授权（iOS）。导出完成后调用。
+    /// </summary>
+    public static void ReleaseSaveAccess(string path)
+    {
+        if (OperatingSystem.IsIOS() && !string.IsNullOrEmpty(path))
+        {
+            ServiceHub.ReleaseSaveDestination?.Invoke(path);
+        }
     }
 
     private static async Task<T> RunOnUiThreadAsync<T>(Func<Task<T>> action)
