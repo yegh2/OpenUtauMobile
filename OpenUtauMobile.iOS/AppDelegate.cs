@@ -34,6 +34,10 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
         ServiceHub.ImportFolderToSandbox = Storage.IOSFileAccess.ImportFolderToSandbox;
         ServiceHub.PrepareSaveDestination = Storage.IOSFileAccess.PrepareSavePath;
         ServiceHub.ReleaseSaveDestination = Storage.IOSFileAccess.ReleaseSavePath;
+        // iOS: 原生 UIDocumentPicker（Avalonia iOS storage provider 不稳定）
+        ServiceHub.PickFileAsync = Storage.IOSDocumentPicker.PickFileAsync;
+        ServiceHub.PickFolderAsync = Storage.IOSDocumentPicker.PickFolderAsync;
+        ServiceHub.SaveFileAsync = Storage.IOSDocumentPicker.SaveFileAsync;
         return base.CustomizeAppBuilder(builder)
             .UseReactiveUI(_ =>
             {

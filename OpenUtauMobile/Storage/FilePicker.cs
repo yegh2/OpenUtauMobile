@@ -65,6 +65,15 @@ public static class FilePicker
             return await PickSingleFileInternalAsync(title, filters);
         }
 
+        // iOS：走原生 UIDocumentPicker（Avalonia iOS storage provider 不稳定），
+        // 选完拷贝进沙盒保证后续可读且跨会话可用。
+        if (OperatingSystem.IsIOS() && ServiceHub.PickFileAsync != null)
+        {
+            string picked = await ServiceHub.PickFileAsync(title, filters);
+            if (string.IsNullOrEmpty(picked)) return string.Empty;
+            return ServiceHub.ImportFileToSandbox?.Invoke(picked) ?? picked;
+        }
+
         IStorageProvider? storageProvider = StorageProviderFactory.GetStorageProvider();
         if (storageProvider is null || !storageProvider.CanOpen)
             return string.Empty;
@@ -84,14 +93,6 @@ public static class FilePicker
         if (files.Count == 0) return string.Empty;
         string? path = files[0].TryGetLocalPath();
         if (string.IsNullOrEmpty(path)) return string.Empty;
-
-        // iOS：系统选择器返回沙盒外的 security-scoped URL，
-        // 拷贝进沙盒保证后续可读且跨会话可用。
-        if (OperatingSystem.IsIOS() && ServiceHub.ImportFileToSandbox != null)
-        {
-            return ServiceHub.ImportFileToSandbox(path);
-        }
-
         return path;
     }
 
@@ -117,6 +118,14 @@ public static class FilePicker
         if (UseInternalPicker)
             return await PickFolderInternalAsync(title);
 
+        // iOS：原生文件夹选择器 + 整体拷进沙盒（如音源目录）。
+        if (OperatingSystem.IsIOS() && ServiceHub.PickFolderAsync != null)
+        {
+            string picked = await ServiceHub.PickFolderAsync(title);
+            if (string.IsNullOrEmpty(picked)) return string.Empty;
+            return ServiceHub.ImportFolderToSandbox?.Invoke(picked) ?? picked;
+        }
+
         IStorageProvider? storageProvider = StorageProviderFactory.GetStorageProvider();
         if (storageProvider is null || !storageProvider.CanPickFolder)
             return string.Empty;
@@ -131,13 +140,6 @@ public static class FilePicker
         if (folders.Count == 0) return string.Empty;
         string? path = folders[0].TryGetLocalPath();
         if (string.IsNullOrEmpty(path)) return string.Empty;
-
-        // iOS：整个文件夹拷进沙盒（如音源目录），保证后续可访问。
-        if (OperatingSystem.IsIOS() && ServiceHub.ImportFolderToSandbox != null)
-        {
-            return ServiceHub.ImportFolderToSandbox(path);
-        }
-
         return path;
     }
 
@@ -163,6 +165,15 @@ public static class FilePicker
             return result ?? string.Empty;
         }
 
+        // iOS：原生保存对话框（导出模式），返回路径后开启 security-scoped 授权。
+        // 写入完成后调用 <see cref="ReleaseSaveAccess"/> 释放。
+        if (OperatingSystem.IsIOS() && ServiceHub.SaveFileAsync != null)
+        {
+            string picked = await ServiceHub.SaveFileAsync(title, extension, defaultFileName);
+            if (string.IsNullOrEmpty(picked)) return string.Empty;
+            return ServiceHub.PrepareSaveDestination?.Invoke(picked) ?? picked;
+        }
+
         // 其他平台：使用系统 SaveFilePicker
         IStorageProvider? storageProvider = StorageProviderFactory.GetStorageProvider();
         if (storageProvider is null || !storageProvider.CanSave) return string.Empty;
@@ -178,14 +189,6 @@ public static class FilePicker
         if (file is null) return string.Empty;
         string? path = file.TryGetLocalPath();
         if (string.IsNullOrEmpty(path)) return string.Empty;
-
-        // iOS：开启 security-scoped 授权，返回可写入路径。
-        // 写入完成后调用 <see cref="ReleaseSaveAccess"/> 释放。
-        if (OperatingSystem.IsIOS() && ServiceHub.PrepareSaveDestination != null)
-        {
-            return ServiceHub.PrepareSaveDestination(path);
-        }
-
         return path;
     }
 

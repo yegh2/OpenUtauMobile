@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Avalonia.Media;
 using OpenUtauMobile.Storage;
 using OpenUtauMobile.Themes.OpenUtauMobile.Runtime;
@@ -25,4 +26,13 @@ public static class ServiceHub
     public static Func<string, string>? PrepareSaveDestination { get; set; }
     /// <summary>释放保存路径的访问授权（iOS）。</summary>
     public static Action<string>? ReleaseSaveDestination { get; set; }
+
+    // iOS：原生 UIDocumentPicker（Avalonia iOS storage provider 不稳定，
+    // RootViewController 拿不到会静默失败）。
+    /// <summary>系统文件选择器：选文件（iOS）。返回沙盒外原始路径。</summary>
+    public static Func<string, string[], Task<string>>? PickFileAsync { get; set; }
+    /// <summary>系统文件夹选择器（iOS）。返回沙盒外原始路径。</summary>
+    public static Func<string, Task<string>>? PickFolderAsync { get; set; }
+    /// <summary>系统保存对话框（iOS）。返回沙盒外目标路径。</summary>
+    public static Func<string, string, string, Task<string>>? SaveFileAsync { get; set; }
 }
