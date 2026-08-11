@@ -207,18 +207,10 @@ public static class IOSDocumentPicker
     [SupportedOSPlatform("ios14.0")]
     private static UTType[] ToUttTypes(string[] filters)
     {
-        if (filters == null || filters.Length == 0)
-        {
-            return new[] { UTTypes.Data };
-        }
-        UTType[] types = filters
-            .Select(f => f.TrimStart('*', '.'))
-            .Where(ext => ext.Length > 0)
-            .Select(UTType.CreateFromExtension)
-            .Where(t => t != null)
-            .Cast<UTType>()
-            .ToArray();
-        return types.Length > 0 ? types : new[] { UTTypes.Data };
+        // iOS 选择器不做严格扩展名过滤：rar/uar/vogen 等非标准扩展名会生成
+        // 动态 UTType（dyn.*），导致 Files App 里对应文件全部置灰不可点。
+        // 统一放行所有文件（public.data），靠用户自行选择。
+        return new[] { UTTypes.Data };
     }
 
     private static void Present(UIViewController picker)
