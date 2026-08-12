@@ -1,6 +1,8 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
+using CoreFoundation;
+using CoreGraphics;
 using Foundation;
 using Avalonia;
 using Avalonia.Media;
