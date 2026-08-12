@@ -38,10 +38,67 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
         ServiceHub.PickFileAsync = Storage.IOSDocumentPicker.PickFileAsync;
         ServiceHub.PickFolderAsync = Storage.IOSDocumentPicker.PickFolderAsync;
         ServiceHub.SaveFileAsync = Storage.IOSDocumentPicker.SaveFileAsync;
+        // iOS: 系统分享面板（导出日志等）
+        ServiceHub.ShareFile = ShareFileAsync;
         return base.CustomizeAppBuilder(builder)
             .UseReactiveUI(_ =>
             {
             });
+    }
+
+    /// <summary>分享单个文件：弹出 iOS 系统分享面板。</summary>
+    private static Task<bool> ShareFileAsync(string path)
+    {
+        var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        DispatchQueue.MainQueue.DispatchAsync(() =>
+        {
+            try
+            {
+                UIViewController? root = GetRootViewController();
+                if (root == null)
+                {
+                    Log.Warning("ShareFile: 找不到 RootViewController");
+                    tcs.TrySetResult(false);
+                    return;
+                }
+
+                NSUrl url = NSUrl.FromFilename(path);
+                var activity = new UIActivityViewController(new NSObject[] { url }, null);
+
+                // iPad 需要 popover 锚点，否则崩溃
+                UIPopoverPresentationController? popover = activity.PopoverPresentationController;
+                if (popover != null)
+                {
+                    popover.SourceView = root.View;
+                    popover.SourceRect = new CGRect(root.View.Bounds.GetMidX(), root.View.Bounds.GetMidY(), 0, 0);
+                    popover.PermittedArrowDirections = UIPopoverArrowDirection.Any;
+                }
+
+                activity.CompletionWithItemsHandler = (_, _, _, _) => tcs.TrySetResult(true);
+                root.PresentViewController(activity, true, null);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "ShareFile: 打开分享面板失败 {Path}", path);
+                tcs.TrySetResult(false);
+            }
+        });
+        return tcs.Task;
+    }
+
+    private static UIViewController? GetRootViewController()
+    {
+        foreach (UIWindowScene scene in UIApplication.SharedApplication.ConnectedScenes)
+        {
+            foreach (UIWindow window in scene.Windows)
+            {
+                if (window.RootViewController != null)
+                {
+                    return window.RootViewController;
+                }
+            }
+        }
+        return null;
     }
 
     private static void InitAudioOutput()

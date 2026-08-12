@@ -1,0 +1,81 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OpenUtauMobile.ViewModels"
+             mc:Ignorable="d"
+             x:Class="OpenUtauMobile.Controls.ConfirmPopup"
+             d:DataContext="{d:DesignInstance Type=vm:ConfirmPopupViewModel, IsDesignTimeCreatable=False}"
+             x:DataType="vm:ConfirmPopupViewModel"
+             Classes="PopupDialogRoot">
+
+    <UserControl.Resources>
+        <!-- 警告图标（感叹号三角形） -->
+        <StreamGeometry x:Key="IconWarning">M1,21 L23,21 L12,2 L1,21 Z M13,18 L11,18 L11,16 L13,16 L13,18 Z M13,14 L11,14 L11,8 L13,8 L13,14 Z</StreamGeometry>
+        <!-- 关闭 / X -->
+        <StreamGeometry x:Key="IconClose">M19,6.41 L17.59,5 L12,10.59 L6.41,5 L5,6.41 L10.59,12 L5,17.59 L6.41,19 L12,13.41 L17.59,19 L19,17.59 L13.41,12 Z</StreamGeometry>
+    </UserControl.Resources>
+
+    <Border Classes="PopupDialogSurface">
+        <DockPanel>
+
+            <!-- ── Header ── -->
+            <Border Classes="PopupTitleBar"
+                    DockPanel.Dock="Top"
+                    Padding="8,8,8,8">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+
+                    <!-- 警告图标 -->
+                    <Panel Grid.Column="0"
+                           Margin="8,0,0,0"
+                           VerticalAlignment="Center">
+                        <PathIcon Width="20" Height="20"
+                                  Data="{StaticResource IconWarning}"
+                                  Foreground="{DynamicResource Sem.Color.Error}" />
+                    </Panel>
+
+                    <!-- 标题 -->
+                    <TextBlock Grid.Column="1"
+                               Margin="8,0,4,0"
+                               VerticalAlignment="Center"
+                               Text="{Binding Title}"
+                               Classes="PopupTitle" />
+
+                    <!-- 关闭按钮 -->
+                    <Button Grid.Column="2"
+                            Classes="IconBtn PopupCloseBtn"
+                            Command="{Binding CancelCommand}">
+                        <PathIcon Width="18" Height="18"
+                                  Data="{StaticResource IconClose}"
+                                  Foreground="{DynamicResource Sem.Color.OnSurface}" />
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- ── Footer：取消 / 确认 ── -->
+            <Border DockPanel.Dock="Bottom"
+                    Padding="12,10,12,12">
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <Button Grid.Column="0"
+                            Classes="AccentBtn"
+                            Content="{Binding CancelText}"
+                            Command="{Binding CancelCommand}" />
+                    <Button Grid.Column="1"
+                            Classes="DeleteBtn"
+                            Content="{Binding ConfirmText}"
+                            Command="{Binding ConfirmCommand}" />
+                </Grid>
+            </Border>
+
+            <!-- ── Content ── -->
+            <StackPanel Orientation="Vertical"
+                        Margin="20,8,20,4"
+                        Spacing="8">
+                <TextBlock Text="{Binding Message}"
+                           TextWrapping="Wrap"
+                           LineHeight="20" />
+            </StackPanel>
+
+        </DockPanel>
+    </Border>
+</UserControl>

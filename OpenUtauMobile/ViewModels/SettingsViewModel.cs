@@ -290,6 +290,9 @@ public class SettingsViewModel : NavigateViewModelBase, IDisposable
     /// <summary>清除渲染缓存命令。</summary>
     public ReactiveCommand<Unit, Unit> ClearRenderCacheCommand { get; }
 
+    /// <summary>导出日志命令（iOS 分享面板 / 其他平台提示路径）。</summary>
+    public ReactiveCommand<Unit, Unit> ExportLogCommand { get; }
+
     // ── Edit & Behaviour ─────────────────────────────────────────────
     /// <summary>可选钢琴键行为列表。</summary>
     public IReadOnlyList<PianoKeyBehaviorOption> AvailablePianoKeyBehaviors { get; } = new List<PianoKeyBehaviorOption>
@@ -488,6 +491,39 @@ public class SettingsViewModel : NavigateViewModelBase, IDisposable
                 Directory.CreateDirectory(PathManager.Inst.CachePath);
                 PathManager.Inst.ClearCache();
             });
+        });
+
+        // 导出日志：优先用平台分享面板（iOS），否则提示日志路径
+        ExportLogCommand = ReactiveCommand.CreateFromTask(async () =>
+        {
+            try
+            {
+                string logPath = PathManager.Inst.LogFilePath;
+                if (!File.Exists(logPath))
+                {
+                    ToastService.Enqueue("日志文件不存在（首次启动后生成）");
+                    return;
+                }
+
+                if (ServiceHub.ShareFile != null)
+                {
+                    bool ok = await ServiceHub.ShareFile(logPath);
+                    if (!ok)
+                    {
+                        ToastService.Enqueue("分享失败");
+                    }
+                }
+                else
+                {
+                    // 桌面等平台：直接提示日志位置
+                    ToastService.Enqueue($"日志路径：{logPath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "导出日志失败");
+                ToastService.Enqueue($"导出日志失败：{ex.Message}");
+            }
         });
 
         // 钢琴键行为初始化

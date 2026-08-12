@@ -35,4 +35,7 @@ public static class ServiceHub
     public static Func<string, Task<string>>? PickFolderAsync { get; set; }
     /// <summary>系统保存对话框（iOS）。返回沙盒外目标路径。</summary>
     public static Func<string, string, string, Task<string>>? SaveFileAsync { get; set; }
+
+    /// <summary>分享单个文件（iOS：系统分享面板）。返回是否成功。</summary>
+    public static Func<string, Task<bool>>? ShareFile { get; set; }
 }

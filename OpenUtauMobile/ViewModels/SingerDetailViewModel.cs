@@ -1,8 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Reactive;
+using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
+using OpenUtau.Core;
 using OpenUtau.Core.Ustx;
+using OpenUtauMobile.Controls;
 using OpenUtauMobile.Services;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -102,15 +105,54 @@ public class SingerDetailViewModel : NavigateViewModelBase
         Navigator.NavigateBack(this);
     }
 
-    private void OnDelete()
+    private async void OnDelete()
     {
-        // TODO: Implement singer deletion
-        // This should:
-        // 1. Show a confirmation dialog
-        // 2. Delete the singer folder from disk
-        // 3. Refresh the singer list
-        // 4. Navigate back
-        ToastService.Enqueue("删除功能暂未实现，建议将歌手安装至外部存储");
+        try
+        {
+            string location = _singer.Location ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(location) || !Directory.Exists(location))
+            {
+                ToastService.Enqueue("音源目录不存在，可能已被删除");
+                return;
+            }
+
+            // 安全保护：只允许删除沙盒 DataPath 内的音源，
+            // 防止误删“额外歌手路径”下的原始音源文件。
+            string dataPath = PathManager.Inst.DataPath;
+            if (!location.StartsWith(dataPath, StringComparison.Ordinal))
+            {
+                ToastService.Enqueue("该音源位于外部路径，请在文件 App 中手动删除");
+                return;
+            }
+
+            ConfirmPopupViewModel vm = new(
+                "删除音源",
+                $"确定要永久删除音源「{_singer.LocalizedName}」吗？\n\n{location}\n\n此操作不可恢复。",
+                "删除", "取消");
+            bool? confirmed = await PopupService.Show<bool?>(new ConfirmPopup(), vm);
+            if (confirmed != true)
+            {
+                return;
+            }
+
+            await Task.Run(() =>
+            {
+                if (Directory.Exists(location))
+                {
+                    Directory.Delete(location, true);
+                }
+            });
+
+            // 重新扫描音源，列表在返回后由 SingerManagementView.OnNavigatedTo 自动刷新
+            SingerManager.Inst.SearchAllSingers();
+            ToastService.Enqueue("音源已删除");
+            Navigator.NavigateBack(this);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "删除音源失败 {Singer}", _singer.Name);
+            ToastService.Enqueue($"删除失败：{ex.Message}");
+        }
     }
 
     private void OnOpenWeb()
