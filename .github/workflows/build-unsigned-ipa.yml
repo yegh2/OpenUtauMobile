@@ -127,20 +127,16 @@ jobs:
             -o ./output
 
       # .NET iOS 的 ImageAsset 在此项目里不触发 actool（Assets.car 未生成）。
-      # 手动用 Xcode actool 编译 Assets.xcassets，把 Assets.car + AppIcon 拷进 .app。
+      # 手动用 Xcode actool 编译 Assets.xcassets，直接输出到 .app（含 Assets.car）。
+      # 注意：编译 app icons 必须传 --output-partial-info-plist，否则不生成 Assets.car。
       - name: Compile asset catalog & embed AppIcon
         run: |
           set -e
           APP_PATH=$(find . -name "*.app" -type d -not -path "*/node_modules/*" | head -1)
           echo "App path: $APP_PATH"
-          mkdir -p /tmp/app-assets
-          xcrun actool OpenUtauMobile.iOS/Assets.xcassets --compile /tmp/app-assets \
+          xcrun actool OpenUtauMobile.iOS/Assets.xcassets --compile "$APP_PATH" \
             --platform iphoneos --minimum-deployment-target 13.0 --app-icon AppIcon \
-            --output-format human-readable-text
-          echo "== actool output =="
-          find /tmp/app-assets -type f
-          cp /tmp/app-assets/Assets.car "$APP_PATH/"
-          cp /tmp/app-assets/AppIcon*.png "$APP_PATH/" 2>/dev/null || true
+            --output-partial-info-plist /tmp/partial-info.plist
           echo "== .app assets =="
           ls "$APP_PATH" | grep -i -E 'Assets|AppIcon' || echo "(no assets in .app!)"
 
