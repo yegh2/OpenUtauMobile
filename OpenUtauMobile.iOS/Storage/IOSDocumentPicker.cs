@@ -62,7 +62,6 @@ public static class IOSDocumentPicker
                 });
                 picker.Delegate = _activeDelegate;
                 Present(picker);
-                Log.Information("IOSDocumentPicker: 文件选择器已弹出 (filters={Filters})", string.Join(",", filters ?? Array.Empty<string>()));
             }
             catch (Exception ex)
             {
@@ -112,7 +111,6 @@ public static class IOSDocumentPicker
                 });
                 picker.Delegate = _activeDelegate;
                 Present(picker);
-                Log.Information("IOSDocumentPicker: 文件夹选择器已弹出");
             }
             catch (Exception ex)
             {
@@ -207,9 +205,9 @@ public static class IOSDocumentPicker
     [SupportedOSPlatform("ios14.0")]
     private static UTType[] ToUttTypes(string[] filters)
     {
-        // iOS 选择器不做严格扩展名过滤：rar/uar/vogen 等非标准扩展名会生成
-        // 动态 UTType（dyn.*），导致 Files App 里对应文件全部置灰不可点。
-        // 统一放行所有文件（public.data），靠用户自行选择。
+        // 历史背景：早期认为“扩展名过滤导致文件置灰”而改为放行所有文件（public.data）。
+        // 后定位真正原因是 LiveContainer 下 UIDocumentPicker 的 XPC 交互问题（Fix File Picker 解决），
+        // 与过滤无关。但 Fix File Picker 开启后恢复精确过滤尚未验证，这里保持放行，避免回归。
         return new[] { UTTypes.Data };
     }
 
