@@ -15,9 +15,11 @@ namespace OpenUtauMobile.Storage;
 /// </summary>
 public static class FilePicker
 {
-    // Android 使用内置 UI；iOS 使用系统 UIDocumentPicker（通过 IStorageProvider）；
+    // 内置 UI：Android / iOS 使用（iOS 放弃系统 UIDocumentPicker，
+    // 因为 LiveContainer 下 Fix File Picker 依赖 TweakLoader 且复制机制不稳定）；
     // Windows DEBUG 下用内置 UI 方便调试。
     private static readonly bool UseInternalPicker = OperatingSystem.IsAndroid()
+                                                     || OperatingSystem.IsIOS()
 #if DEBUG
                                                      || OperatingSystem.IsWindows()
 #endif
