@@ -51,8 +51,10 @@ public static class IOSFileAccess
     /// <summary>
     /// 等待文件/目录真正落盘。LiveContainer 的 Fix File Picker 在回调返回后
     /// 才把选中文件异步复制到 File Provider Storage，立刻读会扑空（文件不存在）。
+    /// 大文件（如音源 zip 几百 MB）复制可能很慢，等待上限放宽到 120 秒，
+    /// 每 10 秒打一条进度日志方便排查。
     /// </summary>
-    private static bool WaitForPath(string path, bool isDirectory, int timeoutMs = 5000)
+    private static bool WaitForPath(string path, bool isDirectory, int timeoutMs = 120000)
     {
         Func<bool> exists = isDirectory
             ? () => Directory.Exists(path)
@@ -61,15 +63,23 @@ public static class IOSFileAccess
         {
             return true;
         }
+        Log.Information("IOSFileAccess: 等待 {Kind} 落盘: {Path}", isDirectory ? "目录" : "文件", path);
         var sw = Stopwatch.StartNew();
+        long lastLogMs = 0;
         while (sw.ElapsedMilliseconds < timeoutMs)
         {
-            Thread.Sleep(100);
+            Thread.Sleep(200);
             if (exists())
             {
                 Log.Information("IOSFileAccess: 等待 {Kind} 落盘完成 ({Elapsed}ms): {Path}",
                     isDirectory ? "目录" : "文件", sw.ElapsedMilliseconds, path);
                 return true;
+            }
+            if (sw.ElapsedMilliseconds - lastLogMs >= 10000)
+            {
+                lastLogMs = sw.ElapsedMilliseconds;
+                Log.Warning("IOSFileAccess: 仍在等待 {Kind} 落盘 ({Elapsed}ms)... {Path}",
+                    isDirectory ? "目录" : "文件", sw.ElapsedMilliseconds, path);
             }
         }
         Log.Warning("IOSFileAccess: 等待 {Kind} 落盘超时 ({Timeout}ms): {Path}",
