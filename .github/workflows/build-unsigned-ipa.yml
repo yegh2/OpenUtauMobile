@@ -140,20 +140,5 @@ jobs:
           name: OpenUtauMobile-unsigned-ipa
           path: OpenUtauMobile-unsigned.ipa
 
-      # artifact 下载永远是 zip 包装（GitHub 平台行为），
-      # 另传一份到 GitHub Release，Release 资产下载是直接 .ipa 文件。
-      # 固定 tag 为 unsigned-ipa-latest，每次构建覆盖更新。
-      - name: Upload to GitHub Release (direct .ipa)
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -e
-          TAG="unsigned-ipa-latest"
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" OpenUtauMobile-unsigned.ipa --clobber
-          else
-            gh release create "$TAG" OpenUtauMobile-unsigned.ipa \
-              --title "Unsigned IPA (latest)" \
-              --notes "dev@${{ github.sha }}\nBuild #${{ github.run_number }}\n\n直接下载 OpenUtauMobile-unsigned.ipa，无需解压 zip。"
-          fi
-          echo "Release updated: $TAG"
+      # 不自动更新 GitHub Release：等页gh测试通过、明确允许后再手动发布。
+      # 需要发布时：手动下载 artifact 里的 .ipa，建 release 上传（见 git 记录）。
