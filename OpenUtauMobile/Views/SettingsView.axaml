@@ -905,19 +905,6 @@
                                             Margin="0,12,0,0"/>
                                 </StackPanel>
                             </Border>
-
-                            <Border Classes="SettingCard">
-                                <StackPanel Spacing="0">
-                                    <TextBlock Classes="SectionLabel" Text="导出日志"/>
-                                    <TextBlock Classes="PlaceholderText"
-                                               Text="把 App 日志文件分享出来，便于排查问题"/>
-                                    <Button Classes="AccentBtn"
-                                            Content="导出日志"
-                                            Command="{Binding ExportLogCommand}"
-                                            HorizontalAlignment="Left"
-                                            Margin="0,12,0,0"/>
-                                </StackPanel>
-                            </Border>
                         </StackPanel>
 
                         <!-- ── 外观与语言 ── -->
