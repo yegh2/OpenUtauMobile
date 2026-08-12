@@ -17,6 +17,13 @@
         <PackageReference Include="Avalonia.iOS" Version="$(AvaloniaVersion)"/>
     </ItemGroup>
 
+    <!-- Assets.xcassets 不会自动包含（非 MAUI 项目），需显式声明为 ImageAsset，
+         构建时由 actool 编译成 Assets.car 打进 .app，否则 App 图标不生效 -->
+    <ItemGroup>
+        <ImageAsset Include="Assets.xcassets\**\*.png"/>
+        <ImageAsset Include="Assets.xcassets\**\Contents.json"/>
+    </ItemGroup>
+
     <ItemGroup>
         <ProjectReference Include="..\OpenUtauMobile\OpenUtauMobile.csproj"/>
     </ItemGroup>
