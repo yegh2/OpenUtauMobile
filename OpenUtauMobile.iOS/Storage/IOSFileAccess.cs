@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using Foundation;
 using OpenUtau.Core;
 using Serilog;
@@ -46,6 +48,35 @@ public static class IOSFileAccess
                && path.StartsWith(ContainerRoot, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// 等待文件/目录真正落盘。LiveContainer 的 Fix File Picker 在回调返回后
+    /// 才把选中文件异步复制到 File Provider Storage，立刻读会扑空（文件不存在）。
+    /// </summary>
+    private static bool WaitForPath(string path, bool isDirectory, int timeoutMs = 5000)
+    {
+        Func<bool> exists = isDirectory
+            ? () => Directory.Exists(path)
+            : () => File.Exists(path);
+        if (exists())
+        {
+            return true;
+        }
+        var sw = Stopwatch.StartNew();
+        while (sw.ElapsedMilliseconds < timeoutMs)
+        {
+            Thread.Sleep(100);
+            if (exists())
+            {
+                Log.Information("IOSFileAccess: 等待 {Kind} 落盘完成 ({Elapsed}ms): {Path}",
+                    isDirectory ? "目录" : "文件", sw.ElapsedMilliseconds, path);
+                return true;
+            }
+        }
+        Log.Warning("IOSFileAccess: 等待 {Kind} 落盘超时 ({Timeout}ms): {Path}",
+            isDirectory ? "目录" : "文件", timeoutMs, path);
+        return false;
+    }
+
     private static NSUrl? StartScope(string path)
     {
         try
@@ -80,7 +111,12 @@ public static class IOSFileAccess
     {
         try
         {
-            if (string.IsNullOrEmpty(externalPath) || !File.Exists(externalPath))
+            if (string.IsNullOrEmpty(externalPath))
+            {
+                return string.Empty;
+            }
+            // Fix File Picker 异步复制，先等文件落盘再判存在
+            if (!WaitForPath(externalPath, isDirectory: false))
             {
                 Log.Warning("IOSFileAccess: 文件不存在 {Path}", externalPath);
                 return string.Empty;
@@ -120,7 +156,12 @@ public static class IOSFileAccess
     {
         try
         {
-            if (string.IsNullOrEmpty(externalPath) || !Directory.Exists(externalPath))
+            if (string.IsNullOrEmpty(externalPath))
+            {
+                return string.Empty;
+            }
+            // Fix File Picker 异步复制，先等目录落盘再判存在
+            if (!WaitForPath(externalPath, isDirectory: true))
             {
                 Log.Warning("IOSFileAccess: 目录不存在 {Path}", externalPath);
                 return string.Empty;
