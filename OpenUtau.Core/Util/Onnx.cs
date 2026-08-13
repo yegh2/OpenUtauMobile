@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime;
 using Microsoft.ML.OnnxRuntime;
 using OpenUtau.Core.Util;
 using Serilog;
@@ -23,6 +24,9 @@ namespace OpenUtau.Core {
 
     public class Onnx {
         private static readonly Dictionary<int, OrtEpDevice> devices = initializeDevices();
+        private static readonly object memoryTrimLock = new object();
+        private static long lastMemoryTrimTicks;
+        private const long memoryTrimIntervalMs = 5000;
 
         private static Dictionary<int, OrtEpDevice> initializeDevices() {
             var env = OrtEnv.Instance();
@@ -92,8 +96,22 @@ namespace OpenUtau.Core {
             return gpuList;
         }
 
+        private static void ApplyMemoryEfficientOptions(SessionOptions options) {
+            // Mobile runs need lower private committed memory more than peak CPU throughput.
+            // The default ORT CPU arena keeps large reusable native buffers after inference.
+            options.EnableCpuMemArena = false;
+            options.EnableMemoryPattern = false;
+        }
+
+        private static SessionOptions getMemoryEfficientCpuSessionOptions() {
+            var options = new SessionOptions();
+            ApplyMemoryEfficientOptions(options);
+            return options;
+        }
+
         private static SessionOptions getOnnxSessionOptions(bool coremlEnableOnSubgraphs = false) {
             SessionOptions options = new SessionOptions();
+            ApplyMemoryEfficientOptions(options);
             List<string> runnerOptions = getRunnerOptions();
             string runner = Preferences.Default.OnnxRunner;
             if (String.IsNullOrEmpty(runner)) {
@@ -130,7 +148,7 @@ namespace OpenUtau.Core {
         public static InferenceSession getInferenceSession(byte[] model, OnnxRunnerChoice runnerChoice = OnnxRunnerChoice.Default) {
             if (runnerChoice == OnnxRunnerChoice.CPU ||
                 (runnerChoice == OnnxRunnerChoice.CPUForCoreML && Preferences.Default.OnnxRunner == "CoreML")) {
-                return new InferenceSession(model);
+                return new InferenceSession(model, getMemoryEfficientCpuSessionOptions());
             } else {
                 // Try with CoreML subgraphs enabled first, fallback to default if it fails
                 if (OS.IsMacOS() && Preferences.Default.OnnxRunner == "CoreML") {
@@ -147,7 +165,7 @@ namespace OpenUtau.Core {
         public static InferenceSession getInferenceSession(string modelPath, OnnxRunnerChoice runnerChoice = OnnxRunnerChoice.Default) {
             if (runnerChoice == OnnxRunnerChoice.CPU ||
                 (runnerChoice == OnnxRunnerChoice.CPUForCoreML && Preferences.Default.OnnxRunner == "CoreML")) {
-                return new InferenceSession(modelPath);
+                return new InferenceSession(modelPath, getMemoryEfficientCpuSessionOptions());
             } else {
                 // Try with CoreML subgraphs enabled first, fallback to default if it fails
                 if (OS.IsMacOS() && Preferences.Default.OnnxRunner == "CoreML") {
@@ -159,6 +177,18 @@ namespace OpenUtau.Core {
                 }
                 return new InferenceSession(modelPath, getOnnxSessionOptions());
             }
+        }
+
+        public static void TrimInferenceMemory() {
+            var ticks = Environment.TickCount64;
+            lock (memoryTrimLock) {
+                if (ticks - lastMemoryTrimTicks < memoryTrimIntervalMs) {
+                    return;
+                }
+                lastMemoryTrimTicks = ticks;
+            }
+            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
         }
 
         public static void VerifyInputNames(InferenceSession session, IEnumerable<NamedOnnxValue> inputs) {

@@ -13,9 +13,9 @@ namespace OpenUtau.Core.Vogen {
             trie ??= TrieNode.LoadDictionary(
                 Data.VogenRes.yue
                     .Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None));
-            g2p ??= new InferenceSession(Data.VogenRes.g2p_yue);
+            g2p ??= Onnx.getInferenceSession(Data.VogenRes.g2p_yue, OnnxRunnerChoice.CPU);
             G2p = g2p;
-            prosody ??= new InferenceSession(Data.VogenRes.po_yue);
+            prosody ??= Onnx.getInferenceSession(Data.VogenRes.po_yue, OnnxRunnerChoice.CPU);
             Prosody = prosody;
         }
 

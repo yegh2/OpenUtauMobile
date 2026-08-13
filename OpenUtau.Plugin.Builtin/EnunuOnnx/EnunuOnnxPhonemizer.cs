@@ -90,7 +90,7 @@ namespace OpenUtau.Plugin.Builtin {
                 durationModelPath = durationModelPath[..^4] + ".onnx";
             }
             try {
-                this.durationModel = new InferenceSession(durationModelPath);
+                this.durationModel = Onnx.getInferenceSession(durationModelPath, OnnxRunnerChoice.CPU);
             } catch (Exception e) {
                 Log.Error(e, $"failed to load duration model from {durationModelPath}");
                 return;
@@ -559,8 +559,10 @@ namespace OpenUtau.Plugin.Builtin {
             durationInputs.Add(NamedOnnxValue.CreateFromTensor("lengths",
                 new DenseTensor<long>(new long[] { (long)phonemesCount },
                 new int[] { 1 }, false)));
-            var durationOutputs = durationModel.Run(durationInputs);
-            var ph_dur_float = durationOutputs.First().AsTensor<float>().ToList();
+            List<float> ph_dur_float;
+            using (var durationOutputs = durationModel.Run(durationInputs)) {
+                ph_dur_float = durationOutputs.First().AsTensor<float>().ToList();
+            }
             durationOutScaler[0].inverse_transform(ph_dur_float);//Phoneme Duration Result in Ms
             var ph_dur = ph_dur_float.Select(x => (double)x).ToList();
 

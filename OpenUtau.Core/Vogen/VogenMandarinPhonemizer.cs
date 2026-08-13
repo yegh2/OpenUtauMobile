@@ -8,9 +8,9 @@ namespace OpenUtau.Core.Vogen {
         private static InferenceSession? prosody;
 
         public VogenMandarinPhonemizer() {
-            g2p ??= new InferenceSession(Data.VogenRes.g2p_man);
+            g2p ??= Onnx.getInferenceSession(Data.VogenRes.g2p_man, OnnxRunnerChoice.CPU);
             G2p = g2p;
-            prosody ??= new InferenceSession(Data.VogenRes.po_man);
+            prosody ??= Onnx.getInferenceSession(Data.VogenRes.po_man, OnnxRunnerChoice.CPU);
             Prosody = prosody;
         }
         protected override string LangPrefix => "man:";

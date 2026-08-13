@@ -41,7 +41,7 @@ namespace OpenUtau.Api {
                     prepGrapheme(parts[0]),
                     parts[1].Split().Select(symbol => prepPhoneme(symbol))));
             var dict = builder.Build();
-            var session = new InferenceSession(g2pData);
+            var session = OpenUtau.Core.Onnx.getInferenceSession(g2pData, OpenUtau.Core.OnnxRunnerChoice.CPU);
             return Tuple.Create((IG2p)dict, session);
         }
 

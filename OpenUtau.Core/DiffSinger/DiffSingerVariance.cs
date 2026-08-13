@@ -183,8 +183,10 @@ namespace OpenUtau.Core.DiffSinger{
                 ? new DiffSingerCache(linguisticHash, linguisticInputs)
                 : null;
             var linguisticOutputs = linguisticCache?.Load();
+            IDisposable? linguisticRunOutputs = null;
             if (linguisticOutputs is null) {
-                linguisticOutputs = linguisticModel.Run(linguisticInputs).Cast<NamedOnnxValue>().ToList();
+                linguisticRunOutputs = linguisticModel.Run(linguisticInputs);
+                linguisticOutputs = ((IEnumerable<NamedOnnxValue>)linguisticRunOutputs).ToList();
                 linguisticCache?.Save(linguisticOutputs);
                 phrase.AddCacheFile(linguisticCache?.Filename);
             }
@@ -267,41 +269,49 @@ namespace OpenUtau.Core.DiffSinger{
                 ? new DiffSingerCache(varianceHash, varianceInputs)
                 : null;
             var varianceOutputs = varianceCache?.Load();
-            if (varianceOutputs is null) {
-                varianceOutputs = varianceModel.Run(varianceInputs).Cast<NamedOnnxValue>().ToList();
-                varianceCache?.Save(varianceOutputs);
-                phrase.AddCacheFile(varianceCache?.Filename);
+            IDisposable? varianceRunOutputs = null;
+            try {
+                if (varianceOutputs is null) {
+                    varianceRunOutputs = varianceModel.Run(varianceInputs);
+                    varianceOutputs = ((IEnumerable<NamedOnnxValue>)varianceRunOutputs).ToList();
+                    varianceCache?.Save(varianceOutputs);
+                    phrase.AddCacheFile(varianceCache?.Filename);
+                }
+                Tensor<float>? energy_pred = dsConfig.predict_energy
+                    ? varianceOutputs
+                        .Where(o => o.Name == "energy_pred")
+                        .First()
+                        .AsTensor<float>()
+                    : null;
+                Tensor<float>? breathiness_pred = dsConfig.predict_breathiness
+                    ? varianceOutputs
+                        .Where(o => o.Name == "breathiness_pred")
+                        .First()
+                        .AsTensor<float>()
+                    : null;
+                Tensor<float>? voicing_pred = dsConfig.predict_voicing
+                    ? varianceOutputs
+                        .Where(o => o.Name == "voicing_pred")
+                        .First()
+                        .AsTensor<float>()
+                    : null;
+                Tensor<float>? tension_pred = dsConfig.predict_tension
+                    ? varianceOutputs
+                        .Where(o => o.Name == "tension_pred")
+                        .First()
+                        .AsTensor<float>()
+                    : null;
+                var result = new VarianceResult{
+                    energy = energy_pred?.ToArray(),
+                    breathiness = breathiness_pred?.ToArray(),
+                    voicing = voicing_pred?.ToArray(),
+                    tension = tension_pred?.ToArray(),
+                };
+                return result;
+            } finally {
+                varianceRunOutputs?.Dispose();
+                linguisticRunOutputs?.Dispose();
             }
-            Tensor<float>? energy_pred = dsConfig.predict_energy
-                ? varianceOutputs
-                    .Where(o => o.Name == "energy_pred")
-                    .First()
-                    .AsTensor<float>()
-                : null;
-            Tensor<float>? breathiness_pred = dsConfig.predict_breathiness
-                ? varianceOutputs
-                    .Where(o => o.Name == "breathiness_pred")
-                    .First()
-                    .AsTensor<float>()
-                : null;
-            Tensor<float>? voicing_pred = dsConfig.predict_voicing
-                ? varianceOutputs
-                    .Where(o => o.Name == "voicing_pred")
-                    .First()
-                    .AsTensor<float>()
-                : null;
-            Tensor<float>? tension_pred = dsConfig.predict_tension
-                ? varianceOutputs
-                    .Where(o => o.Name == "tension_pred")
-                    .First()
-                    .AsTensor<float>()
-                : null;
-            return new VarianceResult{
-                energy = energy_pred?.ToArray(),
-                breathiness = breathiness_pred?.ToArray(),
-                voicing = voicing_pred?.ToArray(),
-                tension = tension_pred?.ToArray(),
-            };
         }
 
         private bool disposedValue;

@@ -242,6 +242,7 @@ namespace OpenUtau.Core.DiffSinger {
                 }
                 variancePredictor = null;
             }
+            Onnx.TrimInferenceMemory();
         }
     }
 }

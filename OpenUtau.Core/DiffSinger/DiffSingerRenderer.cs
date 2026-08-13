@@ -418,17 +418,26 @@ namespace OpenUtau.Core.DiffSinger {
                 ? new DiffSingerCache(singer.acousticHash, acousticInputs)
                 : null;
             var acousticOutputs = acousticCache?.Load();
+            Tensor<float> mel;
             if (acousticOutputs is null) {
+                IDisposable? acousticRunOutputs = null;
                 lock(acousticModel){
                     if(cancellation.IsCancellationRequested) {
                         return null;
                     }
-                    acousticOutputs = acousticModel.Run(acousticInputs).Cast<NamedOnnxValue>().ToList();
+                    acousticRunOutputs = acousticModel.Run(acousticInputs);
+                    acousticOutputs = ((IEnumerable<NamedOnnxValue>)acousticRunOutputs).ToList();
                 }
-                acousticCache?.Save(acousticOutputs);
-                phrase.AddCacheFile(acousticCache?.Filename);
+                try {
+                    acousticCache?.Save(acousticOutputs);
+                    phrase.AddCacheFile(acousticCache?.Filename);
+                    mel = acousticOutputs.First().AsTensor<float>().Clone();
+                } finally {
+                    acousticRunOutputs?.Dispose();
+                }
+            } else {
+                mel = acousticOutputs.First().AsTensor<float>().Clone();
             }
-            Tensor<float> mel = acousticOutputs.First().AsTensor<float>().Clone();
             //mel transforms for different mel base
             if (vocoder.mel_base != singer.dsConfig.mel_base) {
                 float k;
@@ -458,17 +467,31 @@ namespace OpenUtau.Core.DiffSinger {
                 ? new DiffSingerCache(vocoder.hash, vocoderInputs)
                 : null;
             var vocoderOutputs = vocoderCache?.Load();
+            Tensor<float> samplesTensor;
             if (vocoderOutputs is null) {
+                IDisposable? vocoderRunOutputs = null;
                 lock(vocoder){
                     if(cancellation.IsCancellationRequested) {
                         return null;
                     }
-                    vocoderOutputs = vocoder.session.Run(vocoderInputs).Cast<NamedOnnxValue>().ToList();
+                    vocoderRunOutputs = vocoder.session.Run(vocoderInputs);
+                    vocoderOutputs = ((IEnumerable<NamedOnnxValue>)vocoderRunOutputs).ToList();
                 }
-                vocoderCache?.Save(vocoderOutputs);
-                phrase.AddCacheFile(vocoderCache?.Filename);
+                try {
+                    vocoderCache?.Save(vocoderOutputs);
+                    phrase.AddCacheFile(vocoderCache?.Filename);
+                    samplesTensor = vocoderOutputs.First().AsTensor<float>();
+                    int[] expectedShapeFromRun = new int[] { 1, -1 };
+                    if(!DiffSingerUtils.ValidateShape(samplesTensor, expectedShapeFromRun)){
+                        throw new Exception($"The shape of vocoder output should be (1, length), but the actual shape is {DiffSingerUtils.ShapeString(samplesTensor)}");
+                    }
+                    return samplesTensor.ToArray();
+                } finally {
+                    vocoderRunOutputs?.Dispose();
+                }
+            } else {
+                samplesTensor = vocoderOutputs.First().AsTensor<float>();
             }
-            Tensor<float> samplesTensor = vocoderOutputs.First().AsTensor<float>();
             //Check the size of samplesTensor
             int[] expectedShape = new int[] { 1, -1 };
             if(!DiffSingerUtils.ValidateShape(samplesTensor, expectedShape)){

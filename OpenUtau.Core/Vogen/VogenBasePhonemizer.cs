@@ -14,8 +14,8 @@ namespace OpenUtau.Core.Vogen {
         protected InferenceSession Prosody { get; set; }
 
         public VogenBasePhonemizer() {
-            G2p ??= new InferenceSession(Data.VogenRes.g2p_man);
-            Prosody ??= new InferenceSession(Data.VogenRes.po_man);
+            G2p ??= Onnx.getInferenceSession(Data.VogenRes.g2p_man, OnnxRunnerChoice.CPU);
+            Prosody ??= Onnx.getInferenceSession(Data.VogenRes.po_man, OnnxRunnerChoice.CPU);
         }
 
         protected abstract string LangPrefix { get; }

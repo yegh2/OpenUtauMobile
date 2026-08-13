@@ -59,7 +59,7 @@ namespace OpenUtau.Core.DiffSinger {
             //Load phoneme set
             string phonemesPath = Path.Combine(Location, config.phonemes);
             phonemes = File.ReadLines(phonemesPath, Encoding.UTF8).ToList();
-            session = new InferenceSession(Path.Combine(Location, config.model));
+            session = Onnx.getInferenceSession(Path.Combine(Location, config.model), OnnxRunnerChoice.CPU);
         }
     }
 
@@ -167,8 +167,9 @@ namespace OpenUtau.Core.DiffSinger {
             inputs.Add(NamedOnnxValue.CreateFromTensor("is_slur",
                 new DenseTensor<bool>(is_slur.ToArray(), new int[] { is_slur.Count }, false)
                 .Reshape(new int[] { 1, is_slur.Count })));
-            var outputs = rhythmizer.session.Run(inputs);
-            ph_dur = outputs.First().AsTensor<float>().Select(x => (double)x).ToList();
+            using (var outputs = rhythmizer.session.Run(inputs)) {
+                ph_dur = outputs.First().AsTensor<float>().Select(x => (double)x).ToList();
+            }
             //Align the starting time of vowels to the position of each note, unit: s
             var positions = new List<double>();
             List<double> alignGroup = ph_dur.GetRange(0, phAlignPoints[0].Item1);

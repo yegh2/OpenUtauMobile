@@ -182,8 +182,10 @@ namespace OpenUtau.Core.DiffSinger
                 ? new DiffSingerCache(linguisticHash, linguisticInputs)
                 : null;
             var linguisticOutputs = linguisticCache?.Load();
+            IDisposable? linguisticRunOutputs = null;
             if (linguisticOutputs is null) {
-                linguisticOutputs = linguisticModel.Run(linguisticInputs).Cast<NamedOnnxValue>().ToList();
+                linguisticRunOutputs = linguisticModel.Run(linguisticInputs);
+                linguisticOutputs = ((IEnumerable<NamedOnnxValue>)linguisticRunOutputs).ToList();
                 linguisticCache?.Save(linguisticOutputs);
                 phrase.AddCacheFile(linguisticCache?.Filename);
             }
@@ -334,8 +336,13 @@ namespace OpenUtau.Core.DiffSinger
             }
 
             Onnx.VerifyInputNames(pitchModel, pitchInputs);
-            var pitchOutputs = pitchModel.Run(pitchInputs);
-            var pitch_out = pitchOutputs.First().AsTensor<float>().ToArray();
+            float[] pitch_out;
+            try {
+                using var pitchOutputs = pitchModel.Run(pitchInputs);
+                pitch_out = pitchOutputs.First().AsTensor<float>().ToArray();
+            } finally {
+                linguisticRunOutputs?.Dispose();
+            }
             var pitchEnd = phrase.timeAxis.MsPosToTickPos(startMs + (totalFrames - 1) * frameMs) - phrase.position;
             if(pitchEnd<=phrase.duration){
                 return new RenderPitchResult{

@@ -17,7 +17,7 @@ namespace OpenUtau.Core.Analysis.Crepe {
         private bool disposedValue;
 
         public Crepe() {
-            session = new InferenceSession(Resources.tiny);
+            session = Onnx.getInferenceSession(Resources.tiny, OnnxRunnerChoice.CPU);
             centsMapping = Enumerable.Range(0, kActivationSize)
                 .Select(i => i * 20 + 1997.3794084376191)
                 .ToArray();
@@ -32,8 +32,10 @@ namespace OpenUtau.Core.Analysis.Crepe {
             int length = input.Dimensions[0];
             var inputs = new List<NamedOnnxValue>();
             inputs.Add(NamedOnnxValue.CreateFromTensor("input", input));
-            var outputs = session.Run(inputs);
-            var activations = outputs.First().AsTensor<float>().ToArray();
+            float[] activations;
+            using (var outputs = session.Run(inputs)) {
+                activations = outputs.First().AsTensor<float>().ToArray();
+            }
             int[] path = new int[length];
             GetPath(activations, path);
             float[] confidences = new float[length];

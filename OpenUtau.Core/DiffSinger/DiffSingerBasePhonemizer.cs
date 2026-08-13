@@ -92,7 +92,7 @@ namespace OpenUtau.Core.DiffSinger
             try {
                 var linguisticModelBytes = File.ReadAllBytes(linguisticModelPath);
                 linguisticHash = XXH64.DigestOf(linguisticModelBytes);
-                linguisticModel = new InferenceSession(linguisticModelBytes);
+                linguisticModel = Onnx.getInferenceSession(linguisticModelBytes, OnnxRunnerChoice.CPU);
             } catch (Exception e) {
                 Log.Error(e, $"failed to load linguistic model from {linguisticModelPath}");
                 return false;
@@ -101,7 +101,7 @@ namespace OpenUtau.Core.DiffSinger
             try {
                 var durationModelBytes = File.ReadAllBytes(durationModelPath);
                 durationHash = XXH64.DigestOf(durationModelBytes);
-                durationModel = new InferenceSession(durationModelBytes);
+                durationModel = Onnx.getInferenceSession(durationModelBytes, OnnxRunnerChoice.CPU);
             } catch (Exception e) {
                 Log.Error(e, $"failed to load duration model from {durationModelPath}");
                 return false;
@@ -361,8 +361,10 @@ namespace OpenUtau.Core.DiffSinger
                 ? new DiffSingerCache(linguisticHash, linguisticInputs)
                 : null;
             var linguisticOutputs = linguisticCache?.Load();
+            IDisposable? linguisticRunOutputs = null;
             if (linguisticOutputs is null) {
-                linguisticOutputs = linguisticModel.Run(linguisticInputs).Cast<NamedOnnxValue>().ToList();
+                linguisticRunOutputs = linguisticModel.Run(linguisticInputs);
+                linguisticOutputs = ((IEnumerable<NamedOnnxValue>)linguisticRunOutputs).ToList();
                 linguisticCache?.Save(linguisticOutputs);
             }
             Tensor<float> encoder_out = linguisticOutputs
@@ -399,11 +401,19 @@ namespace OpenUtau.Core.DiffSinger
                 ? new DiffSingerCache(durationHash, durationInputs)
                 : null;
             var durationOutputs = durationCache?.Load();
-            if (durationOutputs is null) {
-                durationOutputs = durationModel.Run(durationInputs).Cast<NamedOnnxValue>().ToList();
-                durationCache?.Save(durationOutputs);
+            IDisposable? durationRunOutputs = null;
+            List<double> durationFrames;
+            try {
+                if (durationOutputs is null) {
+                    durationRunOutputs = durationModel.Run(durationInputs);
+                    durationOutputs = ((IEnumerable<NamedOnnxValue>)durationRunOutputs).ToList();
+                    durationCache?.Save(durationOutputs);
+                }
+                durationFrames = durationOutputs.First().AsTensor<float>().Select(x=>(double)x).ToList();
+            } finally {
+                durationRunOutputs?.Dispose();
+                linguisticRunOutputs?.Dispose();
             }
-            List<double> durationFrames = durationOutputs.First().AsTensor<float>().Select(x=>(double)x).ToList();
             
             //Alignment
             //(the index of the phoneme to be aligned, the Ms position of the phoneme)
