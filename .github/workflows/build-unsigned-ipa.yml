@@ -1,6 +1,9 @@
 name: Build Unsigned IPA (OpenUtauMobile)
 
 on:
+  push:
+    branches:
+      - dev
   workflow_dispatch:
 
 permissions:
