@@ -138,5 +138,4 @@ jobs:
           name: OpenUtauMobile-unsigned-ipa
           path: OpenUtauMobile-unsigned.ipa
 
-      # 不自动更新 GitHub Release：等测试通过、明确允许后再手动发布。
-      # 需要发布时：手动下载 artifact 里的 .ipa，建 release 上传（见 git 记录）。
+      # 不自动发布 Release。需要发布时手动下载 artifact 里的 .ipa 再上传。
