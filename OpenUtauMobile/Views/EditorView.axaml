@@ -323,10 +323,16 @@
                   Grid.Row="1"
                   Grid.Column="0"
                   Grid.ColumnSpan="2"
+                  RowDefinitions="Auto,*"
                 Background="{DynamicResource surface-editor-canvas-bg}">
 
+                <!-- 批处理工具栏（对齐上游 OpenUtau 的钢琴卷帘菜单栏） -->
+                <c:PianoRollBatchEditBar Grid.Row="0"
+                                         DataContext="{Binding PianoRollViewModel}"
+                                         IsVisible="{Binding IsVoiceMode}" />
+
                 <!-- 上下文为PianoRollViewModel，放大镜的Source -->
-                <Grid Grid.Row="0" ClipToBounds="True"
+                <Grid Grid.Row="1" ClipToBounds="True"
                       x:Name="PART_PianoRollGrid"
                       DataContext="{Binding PianoRollViewModel}">
                     <Grid.ColumnDefinitions>

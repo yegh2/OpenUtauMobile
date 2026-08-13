@@ -825,6 +825,132 @@
   <data name="PianoRoll.PortraitLoadError" xml:space="preserve">
     <value>立ち絵の読み込みに失敗しました</value>
   </data>
+  <data name="PianoRoll.Menu.SelectAll" xml:space="preserve">
+    <value>すべて選択</value>
+  </data>
+  <data name="PianoRoll.Menu.OctaveUp" xml:space="preserve">
+    <value>1オクターブ上げる</value>
+  </data>
+  <data name="PianoRoll.Menu.OctaveDown" xml:space="preserve">
+    <value>1オクターブ下げる</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics" xml:space="preserve">
+    <value>歌詞</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes" xml:space="preserve">
+    <value>ノート</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset" xml:space="preserve">
+    <value>リセット</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.AddBreath" xml:space="preserve">
+    <value>息を追加</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.AddTailDash" xml:space="preserve">
+    <value>末尾に「-」を追加</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.AddTailRest" xml:space="preserve">
+    <value>末尾に「R」を追加</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RemoveTailDash" xml:space="preserve">
+    <value>末尾の「-」を削除</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RemoveTailRest" xml:space="preserve">
+    <value>末尾の「R」を削除</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.Quantize" xml:space="preserve">
+    <value>グリッドサイズにクオンタイズ</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.AutoLegato" xml:space="preserve">
+    <value>自動レガート</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.FixOverlap" xml:space="preserve">
+    <value>重なりノートを修正</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.BakePitch" xml:space="preserve">
+    <value>PITDをピッチ制御点に変換</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.LoadRenderedPitch" xml:space="preserve">
+    <value>レンダリングされたピッチを読み込む</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RefreshRealCurves" xml:space="preserve">
+    <value>実曲線を更新</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RandomizeTiming" xml:space="preserve">
+    <value>タイミングをランダム化</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RandomizePhonemeOffset" xml:space="preserve">
+    <value>音素オフセットをランダム化</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RandomizeTuning" xml:space="preserve">
+    <value>チューニングをランダム化</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.LengthenCrossfade" xml:space="preserve">
+    <value>クロスフェードを延長</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.RomajiToHiragana" xml:space="preserve">
+    <value>ローマ字→ひらがな</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.HiraganaToRomaji" xml:space="preserve">
+    <value>ひらがな→ローマ字</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.JapaneseVCVtoCV" xml:space="preserve">
+    <value>日本語VCV→CV</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.HanziToPinyin" xml:space="preserve">
+    <value>漢字→ピンイン</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.RemoveToneSuffix" xml:space="preserve">
+    <value>音名サフィックスを削除</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.RemoveLetterSuffix" xml:space="preserve">
+    <value>文字サフィックスを削除</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.MoveSuffixToVoiceColor" xml:space="preserve">
+    <value>サフィックスを声質へ移動</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.RemovePhoneticHint" xml:space="preserve">
+    <value>音素ヒントを削除</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.DashToPlus" xml:space="preserve">
+    <value>「-」を「+」に置換</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.DashToPlusTilda" xml:space="preserve">
+    <value>「-」を「+~」に置換</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.InsertSlur" xml:space="preserve">
+    <value>スラー歌詞を挿入</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.All" xml:space="preserve">
+    <value>すべてリセット</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.PitchBends" xml:space="preserve">
+    <value>ピッチベンドをリセット</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.AllExpressions" xml:space="preserve">
+    <value>すべての表情をリセット</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.ClearVibratos" xml:space="preserve">
+    <value>ビブラートをクリア</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.Vibratos" xml:space="preserve">
+    <value>ビブラートをリセット</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.Timings" xml:space="preserve">
+    <value>音素タイミングをクリア</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.Aliases" xml:space="preserve">
+    <value>音素エイリアスをリセット</value>
+  </data>
+  <data name="PianoRoll.Toast.Transposed" xml:space="preserve">
+    <value>{0} ノートを移調しました</value>
+  </data>
+  <data name="PianoRoll.Toast.TransposeOutOfRange" xml:space="preserve">
+    <value>移調が範囲外です</value>
+  </data>
+  <data name="PianoRoll.Toast.BatchEditFailed" xml:space="preserve">
+    <value>一括編集に失敗しました</value>
+  </data>
   <data name="SingerManagement.Title" xml:space="preserve">
     <value>シンガー管理</value>
   </data>

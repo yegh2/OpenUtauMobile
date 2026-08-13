@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
@@ -13,6 +14,7 @@ using DynamicData;
 using DynamicData.Binding;
 using IconPacks.Avalonia.PhosphorIcons;
 using OpenUtau.Core;
+using OpenUtau.Core.Editing;
 using OpenUtau.Core.Ustx;
 using OpenUtau.Core.Util;
 using OpenUtauMobile.Audio;
@@ -197,6 +199,37 @@ public class PianoRollViewModel : ViewModelBase, IDisposable, ICmdSubscriber
     /// </summary>
     [Reactive]
     public IReadOnlyList<ContextActionItem> PianoRollContextActions { get; private set; } = [];
+
+    /// <summary>
+    /// 全选命令（工具栏，作用域为当前音符分片）。
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> SelectAllCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// 升高八度命令（工具栏）。
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> TransposeUpOctaveCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// 降低八度命令（工具栏）。
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> TransposeDownOctaveCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// 音符批处理菜单条目（对应上游 OpenUtau 的 "Notes" 菜单）。
+    /// 批处理内部自动处理"无选中则作用于分片全部音符"。
+    /// </summary>
+    public IReadOnlyList<MenuActionItem> NoteBatchActions { get; private set; } = [];
+
+    /// <summary>
+    /// 歌词批处理菜单条目（对应上游 OpenUtau 的 "Lyrics" 菜单）。
+    /// </summary>
+    public IReadOnlyList<MenuActionItem> LyricBatchActions { get; private set; } = [];
+
+    /// <summary>
+    /// 重置批处理菜单条目（对应上游 OpenUtau 的 "Reset" 菜单）。
+    /// </summary>
+    public IReadOnlyList<MenuActionItem> ResetBatchActions { get; private set; } = [];
 
     /// <summary>
     /// 上下文菜单是否展开。
@@ -611,6 +644,14 @@ public class PianoRollViewModel : ViewModelBase, IDisposable, ICmdSubscriber
             .Where(expanded => expanded) // 仅展开时触发
             .Subscribe(_ => RebuildPianoRollContextActions())
             .DisposeWith(_disposables);
+
+        // ── 批处理工具栏（对齐上游 OpenUtau）──────
+        SelectAllCommand = ReactiveCommand.Create(SelectAllNotes);
+        TransposeUpOctaveCommand = ReactiveCommand.Create(() => TransposeNotes(12));
+        TransposeDownOctaveCommand = ReactiveCommand.Create(() => TransposeNotes(-12));
+        NoteBatchActions = BuildNoteBatchActions();
+        LyricBatchActions = BuildLyricBatchActions();
+        ResetBatchActions = BuildResetBatchActions();
     }
 
     private void StopPreviewTone()
@@ -2074,6 +2115,182 @@ public class PianoRollViewModel : ViewModelBase, IDisposable, ICmdSubscriber
 
         SelectedNotes.AddRange(EditingVoicePart.notes);
         ToastService.Enqueue(string.Format(L.S("PianoRoll.Selection.AllSelected"), SelectedNotes.Count));
+    }
+
+    /// <summary>
+    /// 将选中的音符（无选中时作用于分片全部音符）整体升高或降低若干半音。
+    /// 任一名符越界则放弃整次操作。
+    /// </summary>
+    /// <param name="deltaTone">半音增量，升高八度为 12，降低八度为 -12。</param>
+    private void TransposeNotes(int deltaTone)
+    {
+        if (EditingVoicePart == null)
+        {
+            return;
+        }
+
+        List<UNote> notes = SelectedNotes.Count > 0
+            ? SelectedNotes.ToList()
+            : EditingVoicePart.notes.ToList();
+        if (notes.Count == 0)
+        {
+            return;
+        }
+
+        const int toneMax = ViewConstants.MaxTone - 1;
+        foreach (UNote note in notes)
+        {
+            int newTone = note.tone + deltaTone;
+            if (newTone < 0 || newTone > toneMax)
+            {
+                ToastService.Enqueue(L.S("PianoRoll.Toast.TransposeOutOfRange"));
+                return;
+            }
+        }
+
+        DocManager.Inst.StartUndoGroup(deferValidate: true);
+        foreach (UNote note in notes)
+        {
+            DocManager.Inst.ExecuteCmd(new MoveNoteCommand(EditingVoicePart, note, 0, deltaTone));
+        }
+
+        DocManager.Inst.EndUndoGroup();
+        ToastService.Enqueue(string.Format(L.S("PianoRoll.Toast.Transposed"), notes.Count));
+    }
+
+    /// <summary>
+    /// 按当前吸附分度量化音符起点/终点。
+    /// </summary>
+    private void QuantizeSelectedNotes()
+    {
+        if (EditingVoicePart == null)
+        {
+            return;
+        }
+
+        int snapUnit = ResolveSnapUnit();
+        if (snapUnit <= 0)
+        {
+            snapUnit = DocManager.Inst.Project.resolution; // 关闭吸附时默认四分音符
+        }
+
+        RunBatchEdit(new QuantizeNotes(snapUnit));
+    }
+
+    /// <summary>
+    /// 运行一个上游批处理（BatchEdit），执行失败时以错误通知弹出。
+    /// </summary>
+    /// <param name="edit">批处理实例。</param>
+    private void RunBatchEdit(BatchEdit edit)
+    {
+        if (EditingVoicePart == null)
+        {
+            return;
+        }
+
+        try
+        {
+            edit.Run(DocManager.Inst.Project, EditingVoicePart, SelectedNotes.ToList(), DocManager.Inst);
+            RequestInvalidateVisual?.Invoke();
+        }
+        catch (Exception e)
+        {
+            DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(L.S("PianoRoll.Toast.BatchEditFailed"), e));
+            Log.Error(e, "运行钢琴卷帘批处理失败");
+        }
+    }
+
+    /// <summary>
+    /// 构建音符批处理菜单条目。
+    /// </summary>
+    private IReadOnlyList<MenuActionItem> BuildNoteBatchActions()
+    {
+        List<MenuActionItem> items =
+        [
+            CreateBatchEditAction("PianoRoll.Menu.Notes.AddBreath", new AddBreathNote("R")),
+            CreateBatchEditAction("PianoRoll.Menu.Notes.AddTailDash", new AddTailNote("-", "PianoRoll.Menu.Notes.AddTailDash")),
+            CreateBatchEditAction("PianoRoll.Menu.Notes.AddTailRest", new AddTailNote("R", "PianoRoll.Menu.Notes.AddTailRest")),
+            CreateBatchEditAction("PianoRoll.Menu.Notes.RemoveTailDash", new RemoveTailNote("-", "PianoRoll.Menu.Notes.RemoveTailDash")),
+            CreateBatchEditAction("PianoRoll.Menu.Notes.RemoveTailRest", new RemoveTailNote("R", "PianoRoll.Menu.Notes.RemoveTailRest")),
+            CreateBatchAction("PianoRoll.Menu.Notes.Quantize", QuantizeSelectedNotes),
+            CreateBatchEditAction("PianoRoll.Menu.Notes.AutoLegato", new AutoLegato()),
+            CreateBatchEditAction("PianoRoll.Menu.Notes.FixOverlap", new FixOverlap()),
+            CreateBatchEditAction("PianoRoll.Menu.Notes.BakePitch", new BakePitch()),
+            CreateBatchEditAction("PianoRoll.Menu.Notes.LoadRenderedPitch", new LoadRenderedPitch()),
+            CreateBatchEditAction("PianoRoll.Menu.Notes.RefreshRealCurves", new RefreshRealCurves()),
+            CreateBatchEditAction("PianoRoll.Menu.Notes.RandomizeTiming", new RandomizeTiming()),
+            CreateBatchEditAction("PianoRoll.Menu.Notes.RandomizePhonemeOffset", new RandomizePhonemeOffset()),
+            CreateBatchEditAction("PianoRoll.Menu.Notes.RandomizeTuning", new RandomizeTuning(100)),
+            CreateBatchEditAction("PianoRoll.Menu.Notes.LengthenCrossfade", new LengthenCrossfade(0.2)),
+        ];
+        return items;
+    }
+
+    /// <summary>
+    /// 构建歌词批处理菜单条目。
+    /// </summary>
+    private IReadOnlyList<MenuActionItem> BuildLyricBatchActions()
+    {
+        List<MenuActionItem> items =
+        [
+            CreateBatchEditAction("PianoRoll.Menu.Lyrics.RomajiToHiragana", new RomajiToHiragana()),
+            CreateBatchEditAction("PianoRoll.Menu.Lyrics.HiraganaToRomaji", new HiraganaToRomaji()),
+            CreateBatchEditAction("PianoRoll.Menu.Lyrics.JapaneseVCVtoCV", new JapaneseVCVtoCV()),
+            CreateBatchEditAction("PianoRoll.Menu.Lyrics.HanziToPinyin", new HanziToPinyin()),
+            CreateBatchEditAction("PianoRoll.Menu.Lyrics.RemoveToneSuffix", new RemoveToneSuffix()),
+            CreateBatchEditAction("PianoRoll.Menu.Lyrics.RemoveLetterSuffix", new RemoveLetterSuffix()),
+            CreateBatchEditAction("PianoRoll.Menu.Lyrics.MoveSuffixToVoiceColor", new MoveSuffixToVoiceColor()),
+            CreateBatchEditAction("PianoRoll.Menu.Lyrics.RemovePhoneticHint", new RemovePhoneticHint()),
+            CreateBatchEditAction("PianoRoll.Menu.Lyrics.DashToPlus", new DashToPlus()),
+            CreateBatchEditAction("PianoRoll.Menu.Lyrics.DashToPlusTilda", new DashToPlusTilda()),
+            CreateBatchEditAction("PianoRoll.Menu.Lyrics.InsertSlur", new InsertSlur()),
+        ];
+        return items;
+    }
+
+    /// <summary>
+    /// 构建重置批处理菜单条目。
+    /// </summary>
+    private IReadOnlyList<MenuActionItem> BuildResetBatchActions()
+    {
+        List<MenuActionItem> items =
+        [
+            CreateBatchEditAction("PianoRoll.Menu.Reset.All", new ResetAll(), isDanger: true),
+            CreateBatchEditAction("PianoRoll.Menu.Reset.PitchBends", new ResetPitchBends()),
+            CreateBatchEditAction("PianoRoll.Menu.Reset.AllExpressions", new ResetAllExpressions()),
+            CreateBatchEditAction("PianoRoll.Menu.Reset.ClearVibratos", new ClearVibratos()),
+            CreateBatchEditAction("PianoRoll.Menu.Reset.Vibratos", new ResetVibratos()),
+            CreateBatchEditAction("PianoRoll.Menu.Reset.Timings", new ClearTimings()),
+            CreateBatchEditAction("PianoRoll.Menu.Reset.Aliases", new ResetAliases()),
+        ];
+        return items;
+    }
+
+    /// <summary>
+    /// 将一个批处理实例包装为菜单条目。
+    /// </summary>
+    /// <param name="headerKey">本地化文本键。</param>
+    /// <param name="edit">批处理实例。</param>
+    /// <param name="isDanger">是否为危险操作。</param>
+    private MenuActionItem CreateBatchEditAction(string headerKey, BatchEdit edit, bool isDanger = false)
+    {
+        return CreateBatchAction(headerKey, () => RunBatchEdit(edit), isDanger);
+    }
+
+    /// <summary>
+    /// 将一段执行逻辑包装为菜单条目。
+    /// </summary>
+    /// <param name="headerKey">本地化文本键。</param>
+    /// <param name="execute">点击时执行的动作。</param>
+    /// <param name="isDanger">是否为危险操作。</param>
+    private MenuActionItem CreateBatchAction(string headerKey, Action execute, bool isDanger = false)
+    {
+        return new MenuActionItem
+        {
+            Header = L.S(headerKey),
+            Command = ReactiveCommand.Create(execute),
+            IsDanger = isDanger,
+        };
     }
 
     private void CopySelectedNotes()

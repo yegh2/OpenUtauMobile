@@ -828,6 +828,132 @@
   <data name="PianoRoll.PortraitLoadError" xml:space="preserve">
     <value>Failed to load portrait</value>
   </data>
+  <data name="PianoRoll.Menu.SelectAll" xml:space="preserve">
+    <value>Select All</value>
+  </data>
+  <data name="PianoRoll.Menu.OctaveUp" xml:space="preserve">
+    <value>Move an Octave Up</value>
+  </data>
+  <data name="PianoRoll.Menu.OctaveDown" xml:space="preserve">
+    <value>Move an Octave Down</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics" xml:space="preserve">
+    <value>Lyrics</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.AddBreath" xml:space="preserve">
+    <value>Add Breath</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.AddTailDash" xml:space="preserve">
+    <value>Add Tail "-"</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.AddTailRest" xml:space="preserve">
+    <value>Add Tail "R"</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RemoveTailDash" xml:space="preserve">
+    <value>Remove Tail "-"</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RemoveTailRest" xml:space="preserve">
+    <value>Remove Tail "R"</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.Quantize" xml:space="preserve">
+    <value>Quantize to Grid Size</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.AutoLegato" xml:space="preserve">
+    <value>Auto Legato</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.FixOverlap" xml:space="preserve">
+    <value>Fix Overlapping Notes</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.BakePitch" xml:space="preserve">
+    <value>Convert PITD to Pitch Control Points</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.LoadRenderedPitch" xml:space="preserve">
+    <value>Load Rendered Pitch</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RefreshRealCurves" xml:space="preserve">
+    <value>Refresh Real Curves</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RandomizeTiming" xml:space="preserve">
+    <value>Randomize Timing</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RandomizePhonemeOffset" xml:space="preserve">
+    <value>Randomize Phoneme Offset</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RandomizeTuning" xml:space="preserve">
+    <value>Randomize Tuning</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.LengthenCrossfade" xml:space="preserve">
+    <value>Lengthen Crossfades</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.RomajiToHiragana" xml:space="preserve">
+    <value>Romaji to Hiragana</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.HiraganaToRomaji" xml:space="preserve">
+    <value>Hiragana to Romaji</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.JapaneseVCVtoCV" xml:space="preserve">
+    <value>Japanese VCV to CV</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.HanziToPinyin" xml:space="preserve">
+    <value>Hanzi to Pinyin</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.RemoveToneSuffix" xml:space="preserve">
+    <value>Remove Tone Suffix</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.RemoveLetterSuffix" xml:space="preserve">
+    <value>Remove Letter Suffix</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.MoveSuffixToVoiceColor" xml:space="preserve">
+    <value>Move Suffix to Voice Color</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.RemovePhoneticHint" xml:space="preserve">
+    <value>Remove Phonetic Hint</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.DashToPlus" xml:space="preserve">
+    <value>Replace "-" with "+"</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.DashToPlusTilda" xml:space="preserve">
+    <value>Replace "-" with "+~"</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.InsertSlur" xml:space="preserve">
+    <value>Insert Slur Lyric</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.All" xml:space="preserve">
+    <value>Reset All</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.PitchBends" xml:space="preserve">
+    <value>Reset Pitch Bends</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.AllExpressions" xml:space="preserve">
+    <value>Reset All Expressions</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.ClearVibratos" xml:space="preserve">
+    <value>Clear Vibratos</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.Vibratos" xml:space="preserve">
+    <value>Reset Vibratos</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.Timings" xml:space="preserve">
+    <value>Clear Phoneme Timings</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.Aliases" xml:space="preserve">
+    <value>Reset Phoneme Aliases</value>
+  </data>
+  <data name="PianoRoll.Toast.Transposed" xml:space="preserve">
+    <value>Transposed {0} notes</value>
+  </data>
+  <data name="PianoRoll.Toast.TransposeOutOfRange" xml:space="preserve">
+    <value>Transpose out of range</value>
+  </data>
+  <data name="PianoRoll.Toast.BatchEditFailed" xml:space="preserve">
+    <value>Batch edit failed</value>
+  </data>
   <data name="SingerManagement.Title" xml:space="preserve">
     <value>Singer Management</value>
   </data>

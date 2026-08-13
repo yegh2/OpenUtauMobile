@@ -828,6 +828,132 @@
   <data name="PianoRoll.PortraitLoadError" xml:space="preserve">
     <value>无法加载立绘</value>
   </data>
+  <data name="PianoRoll.Menu.SelectAll" xml:space="preserve">
+    <value>全选</value>
+  </data>
+  <data name="PianoRoll.Menu.OctaveUp" xml:space="preserve">
+    <value>升高八度</value>
+  </data>
+  <data name="PianoRoll.Menu.OctaveDown" xml:space="preserve">
+    <value>降低八度</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics" xml:space="preserve">
+    <value>歌词</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes" xml:space="preserve">
+    <value>音符</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset" xml:space="preserve">
+    <value>重置</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.AddBreath" xml:space="preserve">
+    <value>添加呼吸音</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.AddTailDash" xml:space="preserve">
+    <value>添加尾音符 "-"</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.AddTailRest" xml:space="preserve">
+    <value>添加尾音符 "R"</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RemoveTailDash" xml:space="preserve">
+    <value>移除尾音符 "-"</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RemoveTailRest" xml:space="preserve">
+    <value>移除尾音符 "R"</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.Quantize" xml:space="preserve">
+    <value>量化到网格大小</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.AutoLegato" xml:space="preserve">
+    <value>自动连音</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.FixOverlap" xml:space="preserve">
+    <value>修复重叠音符</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.BakePitch" xml:space="preserve">
+    <value>将 PITD 转换为音高控制点</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.LoadRenderedPitch" xml:space="preserve">
+    <value>加载渲染音高</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RefreshRealCurves" xml:space="preserve">
+    <value>刷新真实曲线</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RandomizeTiming" xml:space="preserve">
+    <value>随机化时值</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RandomizePhonemeOffset" xml:space="preserve">
+    <value>随机化音素偏移</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RandomizeTuning" xml:space="preserve">
+    <value>随机化调音</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.LengthenCrossfade" xml:space="preserve">
+    <value>加长交叉淡化</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.RomajiToHiragana" xml:space="preserve">
+    <value>罗马音转平假名</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.HiraganaToRomaji" xml:space="preserve">
+    <value>平假名转罗马音</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.JapaneseVCVtoCV" xml:space="preserve">
+    <value>日文 VCV 转 CV</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.HanziToPinyin" xml:space="preserve">
+    <value>汉字转拼音</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.RemoveToneSuffix" xml:space="preserve">
+    <value>移除音调后缀</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.RemoveLetterSuffix" xml:space="preserve">
+    <value>移除字母后缀</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.MoveSuffixToVoiceColor" xml:space="preserve">
+    <value>将后缀移至音色</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.RemovePhoneticHint" xml:space="preserve">
+    <value>移除音标提示</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.DashToPlus" xml:space="preserve">
+    <value>将 "-" 替换为 "+"</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.DashToPlusTilda" xml:space="preserve">
+    <value>将 "-" 替换为 "+~"</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.InsertSlur" xml:space="preserve">
+    <value>插入连音歌词</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.All" xml:space="preserve">
+    <value>全部重置</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.PitchBends" xml:space="preserve">
+    <value>重置音高弯曲</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.AllExpressions" xml:space="preserve">
+    <value>重置所有表情</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.ClearVibratos" xml:space="preserve">
+    <value>清除颤音</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.Vibratos" xml:space="preserve">
+    <value>重置颤音</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.Timings" xml:space="preserve">
+    <value>清除音素时值</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.Aliases" xml:space="preserve">
+    <value>重置音素别名</value>
+  </data>
+  <data name="PianoRoll.Toast.Transposed" xml:space="preserve">
+    <value>已移调 {0} 个音符</value>
+  </data>
+  <data name="PianoRoll.Toast.TransposeOutOfRange" xml:space="preserve">
+    <value>移调超出音域</value>
+  </data>
+  <data name="PianoRoll.Toast.BatchEditFailed" xml:space="preserve">
+    <value>批处理失败</value>
+  </data>
   <data name="SingerManagement.Title" xml:space="preserve">
     <value>歌手管理</value>
   </data>

@@ -1,0 +1,109 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:OpenUtauMobile.ViewModels"
+             xmlns:iconPacks="https://github.com/MahApps/IconPacks.Avalonia"
+             xmlns:theme="clr-namespace:OpenUtauMobile.Themes.OpenUtauMobile.Runtime"
+             mc:Ignorable="d"
+             x:Class="OpenUtauMobile.Controls.PianoRollBatchEditBar"
+             x:DataType="vm:PianoRollViewModel"
+             d:DesignHeight="52"
+             d:DesignWidth="420">
+    <!-- 钢琴卷帘批处理工具栏（对齐上游 OpenUtau 的钢琴卷帘菜单栏） -->
+    <Border Background="{DynamicResource Sem.Color.SurfaceContainerLow}"
+            BorderBrush="{DynamicResource Sem.Color.OutlineVariant}"
+            BorderThickness="0,0,0,1"
+            Padding="{x:Static theme:ThemeSemLayoutTokens.InsetXS}">
+        <StackPanel Orientation="Horizontal"
+                    VerticalAlignment="Center"
+                    Spacing="2">
+            <!-- 全选 -->
+            <Button Classes="TopBarBtn"
+                    Command="{Binding SelectAllCommand}"
+                    ToolTip.Tip="{DynamicResource PianoRoll.Menu.SelectAll}"
+                    Content="{iconPacks:PhosphorIcons SelectionAll}" />
+            <!-- 降低八度 -->
+            <Button Classes="TopBarBtn"
+                    Command="{Binding TransposeDownOctaveCommand}"
+                    ToolTip.Tip="{DynamicResource PianoRoll.Menu.OctaveDown}"
+                    Content="{iconPacks:PhosphorIcons ArrowLineDown}" />
+            <!-- 升高八度 -->
+            <Button Classes="TopBarBtn"
+                    Command="{Binding TransposeUpOctaveCommand}"
+                    ToolTip.Tip="{DynamicResource PianoRoll.Menu.OctaveUp}"
+                    Content="{iconPacks:PhosphorIcons ArrowLineUp}" />
+
+            <!-- 分隔线 -->
+            <Border Width="1"
+                    Background="{DynamicResource Sem.Color.OutlineVariant}"
+                    Margin="4,8" />
+
+            <!-- 歌词批处理菜单 -->
+            <Button Classes="TopBarBtn"
+                    Click="OnMenuButtonClick"
+                    ToolTip.Tip="{DynamicResource PianoRoll.Menu.Lyrics}">
+                <Button.ContextMenu>
+                    <ContextMenu ItemsSource="{Binding LyricBatchActions}">
+                        <ContextMenu.ItemTemplate>
+                            <DataTemplate x:DataType="vm:MenuActionItem">
+                                <MenuItem Header="{Binding Header}"
+                                          Command="{Binding Command}" />
+                            </DataTemplate>
+                        </ContextMenu.ItemTemplate>
+                    </ContextMenu>
+                </Button.ContextMenu>
+                <StackPanel Orientation="Horizontal"
+                            Spacing="1"
+                            VerticalAlignment="Center">
+                    <iconPacks:PackIconPhosphorIcons Kind="TextAa" />
+                    <iconPacks:PackIconPhosphorIcons Kind="CaretDown" />
+                </StackPanel>
+            </Button>
+
+            <!-- 音符批处理菜单 -->
+            <Button Classes="TopBarBtn"
+                    Click="OnMenuButtonClick"
+                    ToolTip.Tip="{DynamicResource PianoRoll.Menu.Notes}">
+                <Button.ContextMenu>
+                    <ContextMenu ItemsSource="{Binding NoteBatchActions}">
+                        <ContextMenu.ItemTemplate>
+                            <DataTemplate x:DataType="vm:MenuActionItem">
+                                <MenuItem Header="{Binding Header}"
+                                          Command="{Binding Command}" />
+                            </DataTemplate>
+                        </ContextMenu.ItemTemplate>
+                    </ContextMenu>
+                </Button.ContextMenu>
+                <StackPanel Orientation="Horizontal"
+                            Spacing="1"
+                            VerticalAlignment="Center">
+                    <iconPacks:PackIconPhosphorIcons Kind="MusicNotes" />
+                    <iconPacks:PackIconPhosphorIcons Kind="CaretDown" />
+                </StackPanel>
+            </Button>
+
+            <!-- 重置批处理菜单 -->
+            <Button Classes="TopBarBtn"
+                    Click="OnMenuButtonClick"
+                    ToolTip.Tip="{DynamicResource PianoRoll.Menu.Reset}">
+                <Button.ContextMenu>
+                    <ContextMenu ItemsSource="{Binding ResetBatchActions}">
+                        <ContextMenu.ItemTemplate>
+                            <DataTemplate x:DataType="vm:MenuActionItem">
+                                <MenuItem Header="{Binding Header}"
+                                          Command="{Binding Command}" />
+                            </DataTemplate>
+                        </ContextMenu.ItemTemplate>
+                    </ContextMenu>
+                </Button.ContextMenu>
+                <StackPanel Orientation="Horizontal"
+                            Spacing="1"
+                            VerticalAlignment="Center">
+                    <iconPacks:PackIconPhosphorIcons Kind="ArrowsClockwise" />
+                    <iconPacks:PackIconPhosphorIcons Kind="CaretDown" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+    </Border>
+</UserControl>

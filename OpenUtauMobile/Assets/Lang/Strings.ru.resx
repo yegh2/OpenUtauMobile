@@ -810,6 +810,132 @@
   <data name="PianoRoll.PortraitLoadError" xml:space="preserve">
     <value>Не удалось загрузить портрет</value>
   </data>
+  <data name="PianoRoll.Menu.SelectAll" xml:space="preserve">
+    <value>Выбрать все</value>
+  </data>
+  <data name="PianoRoll.Menu.OctaveUp" xml:space="preserve">
+    <value>Вверх на октаву</value>
+  </data>
+  <data name="PianoRoll.Menu.OctaveDown" xml:space="preserve">
+    <value>Вниз на октаву</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics" xml:space="preserve">
+    <value>Слова</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes" xml:space="preserve">
+    <value>Ноты</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset" xml:space="preserve">
+    <value>Сброс</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.AddBreath" xml:space="preserve">
+    <value>Добавить дыхание</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.AddTailDash" xml:space="preserve">
+    <value>Добавить хвост «-»</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.AddTailRest" xml:space="preserve">
+    <value>Добавить хвост «R»</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RemoveTailDash" xml:space="preserve">
+    <value>Удалить хвост «-»</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RemoveTailRest" xml:space="preserve">
+    <value>Удалить хвост «R»</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.Quantize" xml:space="preserve">
+    <value>Квантовать по сетке</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.AutoLegato" xml:space="preserve">
+    <value>Авто-легато</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.FixOverlap" xml:space="preserve">
+    <value>Исправить перекрытия нот</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.BakePitch" xml:space="preserve">
+    <value>Преобразовать PITD в точки управления высотой</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.LoadRenderedPitch" xml:space="preserve">
+    <value>Загрузить отрендеренную высоту</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RefreshRealCurves" xml:space="preserve">
+    <value>Обновить реальные кривые</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RandomizeTiming" xml:space="preserve">
+    <value>Случайное время</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RandomizePhonemeOffset" xml:space="preserve">
+    <value>Случайный сдвиг фонем</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.RandomizeTuning" xml:space="preserve">
+    <value>Случайная настройка</value>
+  </data>
+  <data name="PianoRoll.Menu.Notes.LengthenCrossfade" xml:space="preserve">
+    <value>Удлинить кроссфейды</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.RomajiToHiragana" xml:space="preserve">
+    <value>Ромадзи → хирагана</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.HiraganaToRomaji" xml:space="preserve">
+    <value>Хирагана → ромадзи</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.JapaneseVCVtoCV" xml:space="preserve">
+    <value>Японский VCV → CV</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.HanziToPinyin" xml:space="preserve">
+    <value>Ханьцзы → пиньинь</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.RemoveToneSuffix" xml:space="preserve">
+    <value>Удалить суффикс ноты</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.RemoveLetterSuffix" xml:space="preserve">
+    <value>Удалить буквенный суффикс</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.MoveSuffixToVoiceColor" xml:space="preserve">
+    <value>Перенести суффикс в тембр</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.RemovePhoneticHint" xml:space="preserve">
+    <value>Удалить фонетическую подсказку</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.DashToPlus" xml:space="preserve">
+    <value>Заменить «-» на «+»</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.DashToPlusTilda" xml:space="preserve">
+    <value>Заменить «-» на «+~»</value>
+  </data>
+  <data name="PianoRoll.Menu.Lyrics.InsertSlur" xml:space="preserve">
+    <value>Вставить лирику со слэром</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.All" xml:space="preserve">
+    <value>Сбросить всё</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.PitchBends" xml:space="preserve">
+    <value>Сбросить питч-бенды</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.AllExpressions" xml:space="preserve">
+    <value>Сбросить все выражения</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.ClearVibratos" xml:space="preserve">
+    <value>Очистить вибрато</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.Vibratos" xml:space="preserve">
+    <value>Сбросить вибрато</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.Timings" xml:space="preserve">
+    <value>Очистить тайминги фонем</value>
+  </data>
+  <data name="PianoRoll.Menu.Reset.Aliases" xml:space="preserve">
+    <value>Сбросить псевдонимы фонем</value>
+  </data>
+  <data name="PianoRoll.Toast.Transposed" xml:space="preserve">
+    <value>Перенесено нот: {0}</value>
+  </data>
+  <data name="PianoRoll.Toast.TransposeOutOfRange" xml:space="preserve">
+    <value>Перенос за пределами диапазона</value>
+  </data>
+  <data name="PianoRoll.Toast.BatchEditFailed" xml:space="preserve">
+    <value>Ошибка пакетного редактирования</value>
+  </data>
   <data name="SingerManagement.Title" xml:space="preserve">
     <value>Управление банками</value>
   </data>
