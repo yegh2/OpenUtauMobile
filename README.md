@@ -6,8 +6,8 @@ To solve the performance issues, outdated UI design, and cross-platform limitati
 
 The new version is based on:
 
-* Avalonia 11
-* .NET 9 Preview
+* Avalonia 12.1
+* .NET 10
 * MVVM architecture
 
 The goal is to provide a more modern, maintainable, and truly cross-platform mobile singing synthesis experience.
@@ -43,10 +43,10 @@ The goal is to provide a more modern, maintainable, and truly cross-platform mob
 
 ### SDKs
 
-* .NET 9 SDK
+* .NET 10 SDK
 * Android SDK (for Android development)
 * JDK (for Android development)
-* Xcode (for iOS/macOS development, not yet working)
+* Xcode (for iOS/macOS development)
 
 ### Recommended IDEs
 
@@ -62,7 +62,7 @@ The goal is to provide a more modern, maintainable, and truly cross-platform mob
 ## Clone Repository
 
 ```bash
-git clone https://github.com/vocoder712/OpenUtauMobile.git
+git clone https://github.com/yegh2/OpenUtauMobile.git
 cd OpenUtauMobile
 ```
 
@@ -82,7 +82,7 @@ dotnet restore
 
 ```bash
 cd OpenUtauMobile.Windows
-dotnet build -t:Run -c Debug -f net9.0-windows
+dotnet build -t:Run -c Debug -f net10.0-windows
 ```
 
 ## Build Android Version

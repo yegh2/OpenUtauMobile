@@ -1,7 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
+        <!-- 桌面/Android 等平台使用 net10.0；仅在 macOS 构建机上扩展出 net10.0-ios，
+             使 iOS 头项目能精确匹配到该变体（避免在 Windows/Linux 上触发缺 ios workload 的错误）。 -->
+        <TargetFrameworks>net10.0</TargetFrameworks>
+        <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('osx'))">net10.0;net10.0-ios</TargetFrameworks>
         <LangVersion>preview</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>

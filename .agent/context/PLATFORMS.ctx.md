@@ -7,7 +7,7 @@
 | Android          | ✅ Builds and runs    | Primary target            |
 | Windows          | ✅ Builds and runs    | Desktop target            |
 | Linux            | ✅ Builds and runs    | Must run on Linux machine |
-| iOS              | ❌ Does not build yet | In progress               |
+| iOS              | ⚠️ Builds unsigned IPA (CI only) | Local build needs macOS + iOS workload |
 | MacOS (Catalyst) | ❌ Does not build yet | In progress               |
 | Browser          | ⚠️ Builds but hangs  | Initialization hangs      |
 
@@ -40,7 +40,12 @@ dotnet build -t:Run -c Debug
 Run from the `OpenUtauMobile.Linux` project folder. Must execute on a Linux machine.
 
 ### iOS
-Not yet building. See known issues.
+- iOS 头项目 `OpenUtauMobile.iOS` target `net10.0-ios`。
+- 音频后端为 `OpenUtauMobile.iOS/Audio/IOSAudioOutput.cs`（AVAudioEngine + AVAudioPlayerNode）。
+- 文件选择器在 `OpenUtauMobile.iOS/Storage`（内置选择器 + UIDocumentPicker 分享面板）。
+- worldline 静态库通过 `scripts/build_worldline_ios.sh` 交叉编译，CI 里用 NativeReference 注入。
+- 未签名 IPA 由 `.github/workflows/build-unsigned-ipa.yml`（macOS runner）构建。
+- 共享库（Core、Plugin.Builtin、Plugin.Renderers、主库）在 macOS 构建机上通过条件 multi-target 扩展出 `net10.0-ios` 变体；本地 macOS 构建需安装 iOS workload。
 
 ### MacOS (Catalyst)
 Not yet building. See known issues.

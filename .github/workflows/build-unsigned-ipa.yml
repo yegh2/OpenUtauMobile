@@ -1,0 +1,139 @@
+name: Build Unsigned IPA (OpenUtauMobile)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-unsigned-ipa:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10 (Preview)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          include-prerelease: true
+
+      - name: Update workload manifests
+        run: dotnet workload update
+
+      - name: Install MAUI iOS workload
+        run: dotnet workload install maui-ios
+
+      # 目标框架统一由 csproj 内的条件 multi-target 处理：
+      # 共享库在 macOS 上扩展出 net10.0-ios 变体，无需在此用 sed 改写。
+      - name: Restore dependencies (iOS only)
+        run: dotnet restore OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj -p:TargetFramework=net10.0-ios
+
+      # ONNX Runtime iOS targets link onnxruntime.xcframework.zip as a NativeReference.
+      # The xcframework also contains a Mac Catalyst slice whose binary links AppKit,
+      # so the iOS linker fails with "framework 'AppKit' not found". Patch the cached
+      # zip to keep only the ios-arm64 slice (also fixes _RegisterCustomOps resolution
+      # by keeping the static library in the link).
+      - name: Patch OnnxRuntime xcframework (drop maccatalyst slice)
+        run: |
+          set -e
+          ZIP=$(find /Users/runner/.nuget/packages/microsoft.ml.onnxruntime -name "onnxruntime.xcframework.zip" | head -1)
+          echo "Found: $ZIP"
+          DIR=$(dirname "$ZIP")
+          mkdir -p /tmp/xcf
+          cd /tmp/xcf
+          unzip -q "$ZIP"
+          rm -rf onnxruntime.xcframework/ios-arm64_x86_64-maccatalyst
+          rm -rf onnxruntime.xcframework/ios-arm64_x86_64-simulator
+          python3 -c "import plistlib; p=plistlib.load(open('onnxruntime.xcframework/Info.plist','rb')); p['AvailableLibraries']=[l for l in p['AvailableLibraries'] if l.get('LibraryIdentifier')=='ios-arm64']; plistlib.dump(p, open('onnxruntime.xcframework/Info.plist','wb')); print([l['LibraryIdentifier'] for l in p['AvailableLibraries']])"
+          zip -rq "$ZIP" onnxruntime.xcframework
+          echo "Patched xcframework zip"
+
+      # The iOS-specific Microsoft.ML.OnnxRuntime.dll declares DllImport(__Internal)
+      # RegisterCustomOps, but the onnxruntime ios-arm64 static lib does not export
+      # that symbol (it only appears in an error string). Xamarin passes -u
+      # _RegisterCustomOps to the linker, which fails. Provide a stub that defines it.
+      - name: Add RegisterCustomOps stub
+        run: |
+          set -e
+          printf 'int RegisterCustomOps(void) { return 0; }\n' > /tmp/onnx_stub.c
+          clang -arch arm64 -isysroot "$(xcrun --sdk iphoneos --show-sdk-path)" -c /tmp/onnx_stub.c -o /tmp/onnx_stub.o
+          ar rcs /tmp/libonnx_stub.a /tmp/onnx_stub.o
+          echo "stub lib built:"
+          nm /tmp/libonnx_stub.a
+          sed -i '' 's|</Project>|<ItemGroup><NativeReference Include="/tmp/libonnx_stub.a"><Kind>Static</Kind><IsCxx>True</IsCxx><SmartLink>True</SmartLink></NativeReference></ItemGroup></Project>|' OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj
+
+      # worldline (OpenUtau C++ resampler) has no prebuilt iOS binary. Cross-compile
+      # it as a static library and link it via NativeReference (like OnnxRuntime).
+      # DllImport(NativeLib) in Worldline.cs resolves to __Internal on iOS.
+      - name: Build worldline static lib for iOS
+        run: |
+          set -e
+          echo "== fetch worldline C++ sources and patches =="
+          for i in 1 2 3 4 5; do
+            git clone --depth 1 --filter=blob:none --sparse https://github.com/openutau/OpenUtau.git /tmp/openutau && break
+            echo "clone attempt $i failed (DNS/network), retrying in 5s..."
+            sleep 5
+            rm -rf /tmp/openutau
+          done
+          [ -d /tmp/openutau ] || { echo "failed to clone openutau/OpenUtau after 5 attempts"; exit 1; }
+          cd /tmp/openutau
+          git sparse-checkout set cpp/worldline cpp/third_party
+          cp -R cpp/worldline /tmp/worldline-src
+          mkdir -p /tmp/patches
+          cp cpp/third_party/world.patch cpp/third_party/libpyin.patch cpp/third_party/spline.patch /tmp/patches/
+          cd /tmp/worldline-src
+          rm -f worldline_main.cpp worldline_test.cpp audio_debug.cpp audio_output.cpp audio_output.h
+          rm -rf classic/timing_test.cpp f0/*_test.cpp 2>/dev/null || true
+          echo "== build static lib =="
+          WORLDLINE_SRC=/tmp/worldline-src PATCH_DIR=/tmp/patches bash ${{ github.workspace }}/scripts/build_worldline_ios.sh
+          echo "== inject NativeReference =="
+          sed -i '' 's|</Project>|<ItemGroup><NativeReference Include="/tmp/worldline-ios/out/libworldline.a"><Kind>Static</Kind><IsCxx>True</IsCxx><SmartLink>True</SmartLink></NativeReference></ItemGroup></Project>|' ${{ github.workspace }}/OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj
+          echo "injected worldline NativeReference"
+
+          echo "injected NativeReference into iOS csproj"
+
+      # Avalonia 12.x ships a correct default for AvaloniaBuildTasksLocation
+      # (buildTransitive/Avalonia.props points to tools/netstandard2.0/Avalonia.Build.Tasks.dll).
+      # Overriding it with a directory path breaks task loading, so do not pass it.
+      - name: Build .app without signing
+        run: |
+          dotnet publish OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj \
+            -f net10.0-ios \
+            -c Debug \
+            -p:EnableCodeSigning=false \
+            -p:RuntimeIdentifier=ios-arm64 \
+            -o ./output
+
+      # .NET iOS 的 ImageAsset 在此项目里不触发 actool（Assets.car 未生成）。
+      # 手动用 Xcode actool 编译 Assets.xcassets，直接输出到 .app（含 Assets.car）。
+      # 注意：编译 app icons 必须传 --output-partial-info-plist，否则不生成 Assets.car。
+      - name: Compile asset catalog & embed AppIcon
+        run: |
+          set -e
+          APP_PATH=$(find . -name "*.app" -type d -not -path "*/node_modules/*" | head -1)
+          echo "App path: $APP_PATH"
+          xcrun actool OpenUtauMobile.iOS/Assets.xcassets --compile "$APP_PATH" \
+            --platform iphoneos --minimum-deployment-target 13.0 --app-icon AppIcon \
+            --output-partial-info-plist /tmp/partial-info.plist
+          echo "== .app assets =="
+          ls "$APP_PATH" | grep -i -E 'Assets|AppIcon' || echo "(no assets in .app!)"
+
+      - name: Package .app into unsigned .ipa
+        run: |
+          APP_PATH=$(find . -name "*.app" -type d -not -path "*/node_modules/*" | head -1)
+          echo "Found app at: $APP_PATH"
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -r OpenUtauMobile-unsigned.ipa Payload
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenUtauMobile-unsigned-ipa
+          path: OpenUtauMobile-unsigned.ipa
+
+      # 不自动更新 GitHub Release：等测试通过、明确允许后再手动发布。
+      # 需要发布时：手动下载 artifact 里的 .ipa，建 release 上传（见 git 记录）。
