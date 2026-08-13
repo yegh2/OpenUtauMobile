@@ -453,3 +453,7 @@ $RECYCLE.BIN/
 
 ## 质量分析
 /analysis/
+
+# Agent workflow files (local only)
+.agent/
+.kagent/
