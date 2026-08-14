@@ -15,6 +15,8 @@
         <StreamGeometry x:Key="IconError">M12,2 C6.48,2 2,6.48 2,12 C2,17.52 6.48,22 12,22 C17.52,22 22,17.52 22,12 C22,6.48 17.52,2 12,2 Z M13,17 L11,17 L11,15 L13,15 L13,17 Z M13,13 L11,13 L11,7 L13,7 L13,13 Z</StreamGeometry>
         <!-- 关闭 / X -->
         <StreamGeometry x:Key="IconClose">M19,6.41 L17.59,5 L12,10.59 L6.41,5 L5,6.41 L10.59,12 L5,17.59 L6.41,19 L12,13.41 L17.59,19 L19,17.59 L13.41,12 Z</StreamGeometry>
+        <!-- 复制 -->
+        <StreamGeometry x:Key="IconCopy">M16,1 L4,1 C2.9,1 2,1.9 2,3 L2,17 L4,17 L4,3 L16,3 L16,1 Z M19,5 L8,5 C6.9,5 6,5.9 6,7 L6,21 C6,22.1 6.9,23 8,23 L19,23 C20.1,23 21,22.1 21,21 L21,7 C21,5.9 20.1,5 19,5 Z M19,21 L8,21 L8,7 L19,7 L19,21 Z</StreamGeometry>
         <!-- 展开/折叠 Chevron -->
         <StreamGeometry x:Key="IconChevronDown">M7.41,8.59 L12,13.17 L16.59,8.59 L18,10 L12,16 L6,10 L7.41,8.59 Z</StreamGeometry>
     </UserControl.Resources>
@@ -60,9 +62,24 @@
             <!-- ── Footer ── -->
             <Border DockPanel.Dock="Bottom"
                     Padding="12,10,12,12">
-                <Button Classes="PrimaryBtn"
-                        Content="{DynamicResource Common.Confirm}"
-                        Command="{Binding CloseCommand}" />
+                <Grid ColumnDefinitions="Auto,Auto" HorizontalAlignment="Right" ColumnSpacing="8">
+                    <!-- 复制按钮 -->
+                    <Button Grid.Column="0"
+                            Classes="SecondaryBtn"
+                            Command="{Binding CopyCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Width="14" Height="14"
+                                      Data="{StaticResource IconCopy}"
+                                      Foreground="{DynamicResource Sem.Color.OnSurfaceVariant}" />
+                            <TextBlock Text="{DynamicResource Common.Copy}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <!-- 确认按钮 -->
+                    <Button Grid.Column="1"
+                            Classes="PrimaryBtn"
+                            Content="{DynamicResource Common.Confirm}"
+                            Command="{Binding CloseCommand}" />
+                </Grid>
             </Border>
 
             <!-- ── Content ── -->

@@ -1,6 +1,8 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Reactive;
+using System.Threading.Tasks;
+using OpenUtau;
 using OpenUtau.Core;
 using OpenUtauMobile.Helpers;
 using OpenUtauMobile.Services;
@@ -15,7 +17,7 @@ public class OptionsViewModel : NavigateViewModelBase
     public ReactiveCommand<Unit, Unit> OpenSettingsCommand { get; }
     public ReactiveCommand<Unit, Unit> OpenDependencyManagerCommand { get; }
     public ReactiveCommand<Unit, Unit> OpenHelpCommand { get; }
-    public ReactiveCommand<Unit, Unit> ExportLogCommand { get; }
+    public ReactiveCommand<Unit, Unit> OpenLogFolderCommand { get; }
     public ReactiveCommand<Unit, Unit> OpenAboutCommand { get; }
 
     public OptionsViewModel(MainViewModel navigator) : base(navigator)
@@ -24,7 +26,7 @@ public class OptionsViewModel : NavigateViewModelBase
         OpenSettingsCommand = ReactiveCommand.Create(OnOpenSettings);
         OpenDependencyManagerCommand = ReactiveCommand.Create(OnOpenDependencyManager);
         OpenHelpCommand = ReactiveCommand.Create(OnOpenHelp);
-        ExportLogCommand = ReactiveCommand.Create(OnExportLog);
+        OpenLogFolderCommand = ReactiveCommand.CreateFromTask(OnOpenLogFolderAsync);
         OpenAboutCommand = ReactiveCommand.Create(OnOpenAbout);
     }
 
@@ -49,36 +51,38 @@ public class OptionsViewModel : NavigateViewModelBase
         ToastService.Enqueue(L.S("Options.Toast.HelpNotImpl"));
     }
 
-    private async void OnExportLog()
+    /// <summary>
+    /// 打开日志文件夹：桌面平台用系统文件管理器，移动平台用注入的 <see cref="ServiceHub.OpenFolder"/>。
+    /// </summary>
+    private static async Task OnOpenLogFolderAsync()
     {
         try
         {
-            string logPath = PathManager.Inst.LogFilePath;
-            if (!File.Exists(logPath))
+            string logDir = PathManager.Inst.LogsPath;
+            if (!Directory.Exists(logDir))
             {
-                ToastService.Enqueue("日志文件不存在（首次启动后生成）");
+                ToastService.Enqueue(L.S("Options.Toast.LogFolderNotExist"));
                 return;
             }
 
-            if (ServiceHub.ShareFile != null)
+            if (ServiceHub.OpenFolder != null)
             {
-                // iOS：弹出系统分享面板（存文件 / 隔空投送 / 发微信等）
-                bool ok = await ServiceHub.ShareFile(logPath);
+                bool ok = await ServiceHub.OpenFolder(logDir);
                 if (!ok)
                 {
-                    ToastService.Enqueue("分享失败");
+                    ToastService.Enqueue(L.S("Options.Toast.OpenLogFolderFailed"));
                 }
             }
             else
             {
-                // 桌面等平台：直接提示日志位置
-                ToastService.Enqueue($"日志路径：{logPath}");
+                // 桌面等平台：系统文件管理器打开
+                OS.OpenFolder(logDir);
             }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "导出日志失败");
-            ToastService.Enqueue($"导出日志失败：{ex.Message}");
+            Log.Error(ex, "打开日志文件夹失败");
+            ToastService.Enqueue(L.S("Options.Toast.OpenLogFolderFailed"));
         }
     }
 

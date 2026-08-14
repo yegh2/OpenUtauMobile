@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -149,6 +149,9 @@
   </data>
   <data name="Common.Copy" xml:space="preserve">
     <value>复制</value>
+  </data>
+  <data name="Common.Copied" xml:space="preserve">
+    <value>已复制到剪贴板</value>
   </data>
   <data name="Common.Cut" xml:space="preserve">
     <value>剪切</value>
@@ -491,6 +494,9 @@
   </data>
   <data name="FilePicker.ImportMIDI" xml:space="preserve">
     <value>导入MIDI</value>
+  </data>
+  <data name="FilePicker.ImportTrack" xml:space="preserve">
+    <value>导入轨道</value>
   </data>
   <data name="FilePicker.SelectSingerFile" xml:space="preserve">
     <value>选择歌手文件</value>
@@ -1068,11 +1074,11 @@
   <data name="Options.Help.Desc" xml:space="preserve">
     <value>查看使用指南与常见问题</value>
   </data>
-  <data name="Options.ExportLog" xml:space="preserve">
-    <value>导出日志</value>
+  <data name="Options.OpenLogFolder" xml:space="preserve">
+    <value>打开日志文件夹</value>
   </data>
-  <data name="Options.ExportLog.Desc" xml:space="preserve">
-    <value>排查问题时导出并分享日志</value>
+  <data name="Options.OpenLogFolder.Desc" xml:space="preserve">
+    <value>在文件管理器中打开日志文件夹</value>
   </data>
   <data name="Options.About" xml:space="preserve">
     <value>关于</value>
@@ -1083,8 +1089,11 @@
   <data name="Options.Toast.HelpNotImpl" xml:space="preserve">
     <value>帮助与教程页面尚未实现</value>
   </data>
-  <data name="Options.Toast.ExportLogNotImpl" xml:space="preserve">
-    <value>日志导出功能尚未实现</value>
+  <data name="Options.Toast.LogFolderNotExist" xml:space="preserve">
+    <value>日志文件夹尚不存在（首次启动后生成）</value>
+  </data>
+  <data name="Options.Toast.OpenLogFolderFailed" xml:space="preserve">
+    <value>打开日志文件夹失败</value>
   </data>
   <data name="About.Title" xml:space="preserve">
     <value>关于</value>
@@ -1174,7 +1183,16 @@
     <value>导出为音频</value>
   </data>
   <data name="EditorMore.Toast.ImportTrack" xml:space="preserve">
-    <value>TODO: 导入轨道功能</value>
+    <value>轨道导入成功</value>
+  </data>
+  <data name="EditorMore.Loading.ImportTrack" xml:space="preserve">
+    <value>正在导入轨道…</value>
+  </data>
+  <data name="EditorMore.Error.ImportTrackFailed" xml:space="preserve">
+    <value>导入轨道失败</value>
+  </data>
+  <data name="EditorMore.Error.ImportTrackUnknownFormat" xml:space="preserve">
+    <value>不支持或已损坏的工程文件</value>
   </data>
   <data name="EditorMore.Toast.ExportAudio" xml:space="preserve">
     <value>TODO: 导出音频功能</value>

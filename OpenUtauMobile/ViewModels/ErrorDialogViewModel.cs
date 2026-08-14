@@ -1,6 +1,11 @@
-﻿using System.Reactive;
+using System;
+using System.Reactive;
+using System.Threading.Tasks;
+using Avalonia.Controls;
+using Avalonia.Input.Platform;
 using OpenUtau.Core;
 using OpenUtauMobile.Helpers;
+using OpenUtauMobile.Services;
 using ReactiveUI;
 
 namespace OpenUtauMobile.ViewModels;
@@ -17,6 +22,11 @@ public class ErrorDialogViewModel : PopupViewModelBase
     public bool HasDetail => !string.IsNullOrWhiteSpace(Detail);
 
     public ReactiveCommand<Unit, Unit> CloseCommand { get; }
+
+    /// <summary>
+    /// 复制错误内容到剪贴板（含摘要与详情）。
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> CopyCommand { get; }
 
     public ErrorDialogViewModel(ErrorMessageNotification notification)
     {
@@ -47,10 +57,33 @@ public class ErrorDialogViewModel : PopupViewModelBase
         }
 
         CloseCommand = ReactiveCommand.Create(RequestBack);
+        CopyCommand = ReactiveCommand.CreateFromTask(CopyAsync);
     }
 
     public override void RequestBack()
     {
         RaiseClose(null);
+    }
+
+    /// <summary>
+    /// 将标题、摘要与详情拼成文本复制到剪贴板。
+    /// </summary>
+    private async Task CopyAsync()
+    {
+        string text = Title + "\n" + Message;
+        if (!string.IsNullOrWhiteSpace(Detail))
+        {
+            text += "\n\n" + Detail;
+        }
+
+        TopLevel? topLevel = AppService.GetTopLevel();
+        IClipboard? clipboard = topLevel?.Clipboard;
+        if (clipboard == null)
+        {
+            return;
+        }
+
+        await clipboard.SetTextAsync(text);
+        ToastService.Enqueue(L.S("Common.Copied"));
     }
 }

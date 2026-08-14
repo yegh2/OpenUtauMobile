@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -149,6 +149,9 @@
   </data>
   <data name="Common.Copy" xml:space="preserve">
     <value>Копіювати</value>
+  </data>
+  <data name="Common.Copied" xml:space="preserve">
+    <value>Скопійовано в буфер обміну</value>
   </data>
   <data name="Common.Cut" xml:space="preserve">
     <value>Вирізати</value>
@@ -479,6 +482,9 @@
   </data>
   <data name="FilePicker.ImportMIDI" xml:space="preserve">
     <value>Імпорт MIDI</value>
+  </data>
+  <data name="FilePicker.ImportTrack" xml:space="preserve">
+    <value>Імпорт доріжки</value>
   </data>
   <data name="FilePicker.SelectSingerFile" xml:space="preserve">
     <value>Вибрати файл банку</value>
@@ -1050,11 +1056,11 @@
   <data name="Options.Help.Desc" xml:space="preserve">
     <value>Переглянути посібник користувача та FAQ</value>
   </data>
-  <data name="Options.ExportLog" xml:space="preserve">
-    <value>Експорт журналу</value>
+  <data name="Options.OpenLogFolder" xml:space="preserve">
+    <value>Відкрити теку журналу</value>
   </data>
-  <data name="Options.ExportLog.Desc" xml:space="preserve">
-    <value>Експорт і надсилання журналів для діагностики</value>
+  <data name="Options.OpenLogFolder.Desc" xml:space="preserve">
+    <value>Відкрити теку журналу у файловому менеджері</value>
   </data>
   <data name="Options.About" xml:space="preserve">
     <value>Про програму</value>
@@ -1065,8 +1071,11 @@
   <data name="Options.Toast.HelpNotImpl" xml:space="preserve">
     <value>Сторінку довідки ще не реалізовано</value>
   </data>
-  <data name="Options.Toast.ExportLogNotImpl" xml:space="preserve">
-    <value>Експорт журналу ще не реалізовано</value>
+  <data name="Options.Toast.LogFolderNotExist" xml:space="preserve">
+    <value>Теку журналу ще не створено (з'явиться після першого запуску)</value>
+  </data>
+  <data name="Options.Toast.OpenLogFolderFailed" xml:space="preserve">
+    <value>Не вдалося відкрити теку журналу</value>
   </data>
   <data name="About.Title" xml:space="preserve">
     <value>Про програму</value>
@@ -1156,7 +1165,16 @@
     <value>Експортувати як аудіо</value>
   </data>
   <data name="EditorMore.Toast.ImportTrack" xml:space="preserve">
-    <value>TODO: Імпорт треку</value>
+    <value>Доріжку імпортовано</value>
+  </data>
+  <data name="EditorMore.Loading.ImportTrack" xml:space="preserve">
+    <value>Імпорт доріжки…</value>
+  </data>
+  <data name="EditorMore.Error.ImportTrackFailed" xml:space="preserve">
+    <value>Не вдалося імпортувати доріжку</value>
+  </data>
+  <data name="EditorMore.Error.ImportTrackUnknownFormat" xml:space="preserve">
+    <value>Непідтримуваний або пошкоджений файл проєкту</value>
   </data>
   <data name="EditorMore.Toast.ExportAudio" xml:space="preserve">
     <value>TODO: Експорт аудіо</value>

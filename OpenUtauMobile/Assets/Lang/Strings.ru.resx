@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -149,6 +149,9 @@
   </data>
   <data name="Common.Copy" xml:space="preserve">
     <value>Копировать</value>
+  </data>
+  <data name="Common.Copied" xml:space="preserve">
+    <value>Скопировано в буфер обмена</value>
   </data>
   <data name="Common.Cut" xml:space="preserve">
     <value>Вырезать</value>
@@ -479,6 +482,9 @@
   </data>
   <data name="FilePicker.ImportMIDI" xml:space="preserve">
     <value>Импорт MIDI</value>
+  </data>
+  <data name="FilePicker.ImportTrack" xml:space="preserve">
+    <value>Импорт дорожки</value>
   </data>
   <data name="FilePicker.SelectSingerFile" xml:space="preserve">
     <value>Выбрать файл банка</value>
@@ -1050,11 +1056,11 @@
   <data name="Options.Help.Desc" xml:space="preserve">
     <value>Открыть руководство пользователя и раздел FAQ</value>
   </data>
-  <data name="Options.ExportLog" xml:space="preserve">
-    <value>Экспорт журнала</value>
+  <data name="Options.OpenLogFolder" xml:space="preserve">
+    <value>Открыть папку журнала</value>
   </data>
-  <data name="Options.ExportLog.Desc" xml:space="preserve">
-    <value>Экспорт и отправка журналов для диагностики</value>
+  <data name="Options.OpenLogFolder.Desc" xml:space="preserve">
+    <value>Открыть папку журнала в файловом менеджере</value>
   </data>
   <data name="Options.About" xml:space="preserve">
     <value>О программе</value>
@@ -1065,8 +1071,11 @@
   <data name="Options.Toast.HelpNotImpl" xml:space="preserve">
     <value>Страница справки ещё не реализована</value>
   </data>
-  <data name="Options.Toast.ExportLogNotImpl" xml:space="preserve">
-    <value>Экспорт журнала ещё не реализован</value>
+  <data name="Options.Toast.LogFolderNotExist" xml:space="preserve">
+    <value>Папка журнала ещё не создана (появится после первого запуска)</value>
+  </data>
+  <data name="Options.Toast.OpenLogFolderFailed" xml:space="preserve">
+    <value>Не удалось открыть папку журнала</value>
   </data>
   <data name="About.Title" xml:space="preserve">
     <value>О программе</value>
@@ -1156,7 +1165,16 @@
     <value>Экспортировать как аудио</value>
   </data>
   <data name="EditorMore.Toast.ImportTrack" xml:space="preserve">
-    <value>TODO: Импорт трека</value>
+    <value>Трек импортирован</value>
+  </data>
+  <data name="EditorMore.Loading.ImportTrack" xml:space="preserve">
+    <value>Импорт трека…</value>
+  </data>
+  <data name="EditorMore.Error.ImportTrackFailed" xml:space="preserve">
+    <value>Не удалось импортировать трек</value>
+  </data>
+  <data name="EditorMore.Error.ImportTrackUnknownFormat" xml:space="preserve">
+    <value>Неподдерживаемый или повреждённый файл проекта</value>
   </data>
   <data name="EditorMore.Toast.ExportAudio" xml:space="preserve">
     <value>TODO: Экспорт аудио</value>

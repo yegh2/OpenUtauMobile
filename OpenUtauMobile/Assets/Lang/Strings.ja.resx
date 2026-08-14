@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -149,6 +149,9 @@
   </data>
   <data name="Common.Copy" xml:space="preserve">
     <value>コピー</value>
+  </data>
+  <data name="Common.Copied" xml:space="preserve">
+    <value>クリップボードにコピーしました</value>
   </data>
   <data name="Common.Cut" xml:space="preserve">
     <value>カット</value>
@@ -488,6 +491,9 @@
   </data>
   <data name="FilePicker.ImportMIDI" xml:space="preserve">
     <value>MIDIをインポート</value>
+  </data>
+  <data name="FilePicker.ImportTrack" xml:space="preserve">
+    <value>トラックをインポート</value>
   </data>
   <data name="FilePicker.SelectSingerFile" xml:space="preserve">
     <value>シンガーファイルを選択</value>
@@ -1065,11 +1071,11 @@
   <data name="Options.Help.Desc" xml:space="preserve">
     <value>使い方ガイドとFAQを見る</value>
   </data>
-  <data name="Options.ExportLog" xml:space="preserve">
-    <value>ログをエクスポート</value>
+  <data name="Options.OpenLogFolder" xml:space="preserve">
+    <value>ログフォルダーを開く</value>
   </data>
-  <data name="Options.ExportLog.Desc" xml:space="preserve">
-    <value>トラブルシューティング用にログをエクスポート・共有</value>
+  <data name="Options.OpenLogFolder.Desc" xml:space="preserve">
+    <value>ファイルマネージャーでログフォルダーを開く</value>
   </data>
   <data name="Options.About" xml:space="preserve">
     <value>このアプリについて</value>
@@ -1080,8 +1086,11 @@
   <data name="Options.Toast.HelpNotImpl" xml:space="preserve">
     <value>ヘルプページは未実装です</value>
   </data>
-  <data name="Options.Toast.ExportLogNotImpl" xml:space="preserve">
-    <value>ログエクスポートは未実装です</value>
+  <data name="Options.Toast.LogFolderNotExist" xml:space="preserve">
+    <value>ログフォルダーがまだ存在しません（初回起動時に生成されます）</value>
+  </data>
+  <data name="Options.Toast.OpenLogFolderFailed" xml:space="preserve">
+    <value>ログフォルダーを開けませんでした</value>
   </data>
   <data name="About.Title" xml:space="preserve">
     <value>このアプリについて</value>
@@ -1171,7 +1180,16 @@
     <value>オーディオとしてエクスポート</value>
   </data>
   <data name="EditorMore.Toast.ImportTrack" xml:space="preserve">
-    <value>TODO: トラックをインポート</value>
+    <value>トラックをインポートしました</value>
+  </data>
+  <data name="EditorMore.Loading.ImportTrack" xml:space="preserve">
+    <value>トラックをインポート中…</value>
+  </data>
+  <data name="EditorMore.Error.ImportTrackFailed" xml:space="preserve">
+    <value>トラックのインポートに失敗しました</value>
+  </data>
+  <data name="EditorMore.Error.ImportTrackUnknownFormat" xml:space="preserve">
+    <value>サポートされていないか破損したプロジェクトファイルです</value>
   </data>
   <data name="EditorMore.Toast.ExportAudio" xml:space="preserve">
     <value>TODO: オーディオをエクスポート</value>

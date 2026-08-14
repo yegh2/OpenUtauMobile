@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -149,6 +149,9 @@
   </data>
   <data name="Common.Copy" xml:space="preserve">
     <value>Copy</value>
+  </data>
+  <data name="Common.Copied" xml:space="preserve">
+    <value>Copied to clipboard</value>
   </data>
   <data name="Common.Cut" xml:space="preserve">
     <value>Cut</value>
@@ -491,6 +494,9 @@
   </data>
   <data name="FilePicker.ImportMIDI" xml:space="preserve">
     <value>Import MIDI</value>
+  </data>
+  <data name="FilePicker.ImportTrack" xml:space="preserve">
+    <value>Import Track</value>
   </data>
   <data name="FilePicker.SelectSingerFile" xml:space="preserve">
     <value>Select Singer File</value>
@@ -1068,11 +1074,11 @@
   <data name="Options.Help.Desc" xml:space="preserve">
     <value>View user guide and FAQ</value>
   </data>
-  <data name="Options.ExportLog" xml:space="preserve">
-    <value>Export Log</value>
+  <data name="Options.OpenLogFolder" xml:space="preserve">
+    <value>Open Log Folder</value>
   </data>
-  <data name="Options.ExportLog.Desc" xml:space="preserve">
-    <value>Export and share logs for troubleshooting</value>
+  <data name="Options.OpenLogFolder.Desc" xml:space="preserve">
+    <value>Open the log folder in the file manager</value>
   </data>
   <data name="Options.About" xml:space="preserve">
     <value>About</value>
@@ -1083,8 +1089,11 @@
   <data name="Options.Toast.HelpNotImpl" xml:space="preserve">
     <value>Help page not implemented yet</value>
   </data>
-  <data name="Options.Toast.ExportLogNotImpl" xml:space="preserve">
-    <value>Log export not implemented yet</value>
+  <data name="Options.Toast.LogFolderNotExist" xml:space="preserve">
+    <value>Log folder does not exist yet (generated on first launch)</value>
+  </data>
+  <data name="Options.Toast.OpenLogFolderFailed" xml:space="preserve">
+    <value>Failed to open log folder</value>
   </data>
   <data name="About.Title" xml:space="preserve">
     <value>About</value>
@@ -1174,7 +1183,16 @@
     <value>Export as Audio</value>
   </data>
   <data name="EditorMore.Toast.ImportTrack" xml:space="preserve">
-    <value>TODO: ImportTrack</value>
+    <value>Track imported</value>
+  </data>
+  <data name="EditorMore.Loading.ImportTrack" xml:space="preserve">
+    <value>Importing track…</value>
+  </data>
+  <data name="EditorMore.Error.ImportTrackFailed" xml:space="preserve">
+    <value>Failed to import track</value>
+  </data>
+  <data name="EditorMore.Error.ImportTrackUnknownFormat" xml:space="preserve">
+    <value>Unsupported or corrupted project file</value>
   </data>
   <data name="EditorMore.Toast.ExportAudio" xml:space="preserve">
     <value>TODO: ExportAudio</value>

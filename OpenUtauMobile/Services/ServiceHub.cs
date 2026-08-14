@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Avalonia.Media;
 using OpenUtauMobile.Storage;
@@ -38,4 +38,7 @@ public static class ServiceHub
 
     /// <summary>分享单个文件（iOS：系统分享面板）。返回是否成功。</summary>
     public static Func<string, Task<bool>>? ShareFile { get; set; }
+
+    /// <summary>在系统文件管理器中打开指定文件夹（iOS / Android 注入实现）。返回是否成功。</summary>
+    public static Func<string, Task<bool>>? OpenFolder { get; set; }
 }

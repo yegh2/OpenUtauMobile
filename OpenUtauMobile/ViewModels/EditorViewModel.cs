@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -542,8 +542,7 @@ public class EditorViewModel : NavigateViewModelBase, ICmdSubscriber, IDisposabl
                 _ = ImportMidi();
                 break;
             case EditorMoreAction.ImportTrack:
-                // TODO: Handle ImportTrack action
-                ToastService.Enqueue(L.S("EditorMore.Toast.ImportTrack"));
+                _ = ImportTrack();
                 break;
             case EditorMoreAction.ExportAudio:
                 _ = ShowExportAudioPopupAsync();
@@ -609,6 +608,47 @@ public class EditorViewModel : NavigateViewModelBase, ICmdSubscriber, IDisposabl
         DocManager.Inst.EndUndoGroup();
         // TODO
         ToastService.Enqueue(L.S("Editor.SyncTempoTodo"));
+    }
+
+    /// <summary>
+    /// 导入轨道：从工程文件（USTX/VSQX/UST/MIDI/UFData/MusicXML 等）导入轨道到当前工程。
+    /// 文件解析在后台线程执行，合并轨道在 UI 线程执行（会修改当前工程并发起 LoadProjectNotification）。
+    /// </summary>
+    private static async Task ImportTrack()
+    {
+        string file = await FilePicker.PickSingleFileAsync(
+            L.S("FilePicker.ImportTrack"),
+            ["*.ustx", "*.vsqx", "*.vsq", "*.ust", "*.mid", "*.midi", "*.ufdata", "*.musicxml", "*.xml"]);
+        if (file == string.Empty)
+        {
+            return;
+        }
+
+        try
+        {
+            await LoadingPopupService.RunAsync(
+                L.S("EditorMore.Loading.ImportTrack"),
+                async _ =>
+                {
+                    // 后台解析工程文件，避免阻塞 UI 线程
+                    UProject? loadedProject = await Task.Run(() => Formats.ReadProject([file]));
+                    if (loadedProject == null)
+                    {
+                        throw new FileFormatException(L.S("EditorMore.Error.ImportTrackUnknownFormat"));
+                    }
+
+                    // 合并轨道必须在 UI 线程执行（会修改当前工程并发起 LoadProjectNotification）
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                        Formats.ImportTracks(DocManager.Inst.Project, [loadedProject], importTempo: false));
+                });
+            ToastService.Enqueue(L.S("EditorMore.Toast.ImportTrack"));
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "导入轨道失败：{File}", file);
+            ErrorMessageNotification notification = new(L.S("EditorMore.Error.ImportTrackFailed"), ex);
+            ErrorDialogService.Show(new ErrorDialogViewModel(notification));
+        }
     }
 
     /// <summary>

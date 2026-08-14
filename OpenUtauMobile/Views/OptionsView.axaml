@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -139,8 +139,8 @@
                         <!-- Separator -->
                         <Border Classes="Separator" />
 
-                        <!-- 鈺愨晲鈺?4. 瀵煎嚭鏃ュ織 鈺愨晲鈺?-->
-                        <Button Classes="OptionEntry" Command="{Binding ExportLogCommand}">
+                        <!-- 打开日志文件夹 -->
+                        <Button Classes="OptionEntry" Command="{Binding OpenLogFolderCommand}">
                             <Grid ColumnDefinitions="52,*,Auto" MinHeight="56">
                                 <Panel Grid.Column="0"
                                        Width="36" Height="36"
@@ -149,15 +149,14 @@
                                     <Border Width="36" Height="36"
                                             CornerRadius="10"
                                             Background="{DynamicResource Sem.Color.PrimaryContainer}" />
-                                    <iconPacks:PackIconPhosphorIcons Kind="Bug" />
+                                    <iconPacks:PackIconPhosphorIcons Kind="FolderOpen" />
                                 </Panel>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2" Margin="0,0,8,0">
-                                    <TextBlock Text="{DynamicResource Options.ExportLog}" FontSize="15"
+                                    <TextBlock Text="{DynamicResource Options.OpenLogFolder}" FontSize="15"
                                                FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Text="{DynamicResource Options.ExportLog.Desc}" FontSize="11"
+                                    <TextBlock Text="{DynamicResource Options.OpenLogFolder.Desc}" FontSize="11"
                                                Opacity="0.50" TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
-                                <!-- Export icon instead of chevron -->
                                 <iconPacks:PackIconPhosphorIcons Kind="CaretRight"
                                                                  Classes="CaretRight"
                                                                  Grid.Column="2" />
