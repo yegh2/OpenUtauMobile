@@ -42,7 +42,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
         ServiceHub.SaveFileAsync = Storage.IOSDocumentPicker.SaveFileAsync;
         // iOS: 系统分享面板（导出日志等）
         ServiceHub.ShareFile = ShareFileAsync;
-        // iOS: 打开日志文件夹 → 跳转到"文件"App（Documents 目录已在 Info.plist 中开放共享）
+        // iOS: 打开日志文件夹 → 用文件浏览器定位到日志目录（DirectoryUrl）
         ServiceHub.OpenFolder = OpenFolderAsync;
         return base.CustomizeAppBuilder(builder)
             .UseReactiveUI(_ =>
@@ -50,37 +50,9 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
             });
     }
 
-    /// <summary>打开指定文件夹：跳转到"文件"App（iOS 无法定位到任意沙盒目录，只能打开文件 App 根浏览）。</summary>
+    /// <summary>打开指定文件夹：用 UIDocumentPickerViewController 定位到该目录，让用户直接看到文件夹内容。</summary>
     private static Task<bool> OpenFolderAsync(string path)
-    {
-        var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        DispatchQueue.MainQueue.DispatchAsync(() =>
-        {
-            try
-            {
-                // 文件 App 的 URL scheme（iOS 11+）。仅能打开根浏览页，无法深链到具体目录。
-                NSUrl url = NSUrl.FromString("shareddocuments://");
-                if (UIApplication.SharedApplication.CanOpenUrl(url))
-                {
-                    UIApplication.SharedApplication.OpenUrl(url, new UIApplicationOpenUrlOptions(), _ =>
-                    {
-                        tcs.TrySetResult(true);
-                    });
-                }
-                else
-                {
-                    Log.Warning("OpenFolder: 无法打开文件 App（CanOpenUrl 返回 false），路径 {Path}", path);
-                    tcs.TrySetResult(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "OpenFolder: 打开文件 App 失败 {Path}", path);
-                tcs.TrySetResult(false);
-            }
-        });
-        return tcs.Task;
-    }
+        => Storage.IOSDocumentPicker.OpenFolderAsync(path);
 
     /// <summary>分享单个文件：弹出 iOS 系统分享面板。</summary>
     private static Task<bool> ShareFileAsync(string path)

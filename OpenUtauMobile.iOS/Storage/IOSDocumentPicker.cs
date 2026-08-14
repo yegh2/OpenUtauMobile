@@ -127,8 +127,7 @@ public static class IOSDocumentPicker
     /// 取消或失败返回空字符串。
     /// </summary>
     [SupportedOSPlatform("ios14.0")]
-    public static Task<string> SaveFileAsync(string title, string extension, string defaultFileName)
-    {
+    public static Task<string> SaveFileAsync(string title, string extension, string defaultFileName)    {
         var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
         DispatchQueue.MainQueue.DispatchAsync(() =>
         {
@@ -197,6 +196,66 @@ public static class IOSDocumentPicker
                     try { NSFileManager.DefaultManager.Remove(tempDir, out _); } catch { }
                 }
                 tcs.TrySetResult(string.Empty);
+            }
+        });
+        return tcs.Task;
+    }
+
+    /// <summary>
+    /// 打开指定文件夹：用 UIDocumentPickerViewController 定位到该目录，
+    /// 让用户在"文件"浏览器中直接看到文件夹内容（如日志目录）。
+    /// iOS 无法像桌面那样打开系统文件管理器并选中目录，这是最接近的替代方案：
+    /// 通过 <see cref="UIDocumentPickerViewController.DirectoryUrl"/> 让选择器初始显示目标文件夹。
+    /// 注意：DirectoryUrl 在部分 iOS 版本（如 14.x）存在已知问题可能被忽略，
+    /// 此时会退化为文件浏览器根目录，但仍比跳转文件 App 更接近目标。
+    /// </summary>
+    /// <param name="path">要打开的文件夹绝对路径（沙盒内）。</param>
+    /// <returns>是否成功弹出文件浏览器。</returns>
+    [SupportedOSPlatform("ios14.0")]
+    public static Task<bool> OpenFolderAsync(string path)
+    {
+        var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        DispatchQueue.MainQueue.DispatchAsync(() =>
+        {
+            try
+            {
+                if (!OperatingSystem.IsIOSVersionAtLeast(14))
+                {
+                    Log.Warning("IOSDocumentPicker: 打开文件夹需要 iOS 14+");
+                    tcs.TrySetResult(false);
+                    return;
+                }
+
+                // 打开模式（允许任意文件/文件夹），配合 DirectoryUrl 定位到目标目录，
+                // 用户可直接看到日志文件夹内容并进入浏览。
+                var picker = new UIDocumentPickerViewController(new[] { UTTypes.Data }, false);
+                picker.Title = "OpenUtau";
+                if (OperatingSystem.IsIOSVersionAtLeast(11))
+                {
+                    picker.AllowsMultipleSelection = false;
+                }
+
+                // 让文件浏览器初始定位到目标文件夹（部分系统版本可能忽略）
+                NSUrl folderUrl = NSUrl.FromFilename(path);
+                if (NSFileManager.DefaultManager.FileExists(folderUrl.Path ?? string.Empty, out bool isDir) && isDir)
+                {
+                    picker.DirectoryUrl = folderUrl;
+                }
+
+                // 仅浏览，无需处理选择结果；保持强引用防止 delegate 被回收
+                _activeDelegate = new PickDelegate(urls =>
+                {
+                    _activeDelegate = null;
+                    tcs.TrySetResult(true);
+                });
+                picker.Delegate = _activeDelegate;
+                Present(picker);
+                tcs.TrySetResult(true);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "IOSDocumentPicker: 打开文件夹失败 {Path}", path);
+                tcs.TrySetResult(false);
             }
         });
         return tcs.Task;
