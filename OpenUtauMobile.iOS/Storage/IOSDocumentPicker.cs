@@ -237,7 +237,8 @@ public static class IOSDocumentPicker
 
                 // 让文件浏览器初始定位到目标文件夹（部分系统版本可能忽略）
                 NSUrl folderUrl = NSUrl.FromFilename(path);
-                if (NSFileManager.DefaultManager.FileExists(folderUrl.Path ?? string.Empty, out bool isDir) && isDir)
+                bool isDir = false;
+                if (NSFileManager.DefaultManager.FileExists(folderUrl.Path ?? string.Empty, ref isDir) && isDir)
                 {
                     picker.DirectoryUrl = folderUrl;
                 }
