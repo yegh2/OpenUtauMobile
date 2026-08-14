@@ -1,148 +1,164 @@
-# OpenUtau Mobile Developer Preview
+# OpenUtau Mobile (iOS)
 
-## Overview
+[English](README.md) | [简体中文](README_zh.md)
 
-To solve the performance issues, outdated UI design, and cross-platform limitations of the first-generation implementation, the project is being rebuilt from scratch.
+## Special Thanks
 
-The new version is based on:
+- [OpenUtau](https://github.com/stakira/OpenUtau)
+- [vocoder712/OpenUtauMobile](https://github.com/vocoder712/OpenUtauMobile) (upstream)
 
-* Avalonia 12.1
-* .NET 10
-* MVVM architecture
+## What is OpenUtau Mobile?
 
-The goal is to provide a more modern, maintainable, and truly cross-platform mobile singing synthesis experience.
+OpenUtau Mobile is an open-source, free singing synthesis software for mobile devices.
+
+This repository is an **iOS-focused fork** of [vocoder712/OpenUtauMobile](https://github.com/vocoder712/OpenUtauMobile). It is an editor based on the [OpenUtau Core](https://github.com/stakira/OpenUtau/tree/master/OpenUtau.Core) with some patches applied. It fully supports OpenUtau USTX project files.
+
+The second-generation rewrite is based on:
+
+- Avalonia 12.1
+- .NET 10
+- MVVM architecture (ReactiveUI)
+
+## Compatibility
+
+### Platforms
+
+- iOS (built as an unsigned IPA, requires self-signing)
+
+### Singer Types
+
+- DiffSinger
+- UTAU
+- Vogen
+
+Other untested types are not guaranteed to work correctly.
+
+## Quick Start
+
+1. Download the unsigned IPA from the latest [Actions](https://github.com/yegh2/OpenUtauMobile/actions/workflows/build-unsigned-ipa.yml) run (artifact `OpenUtauMobile-unsigned-ipa`), then sign and install it on your iPhone.
+2. Download a voicebank. You can usually find download links on the [DiffSinger Custom Voicebank Share Page](https://docs.qq.com/sheet/DQXNDY0pPaEpOc3JN?tab=BB08J2) or the [UTAU wiki](https://utau.fandom.com/). Voicebanks are usually packaged in ZIP format.
+3. Open the software → Tap the `Singer` button on the home page → Tap `+` → Select the voicebank package (ZIP) downloaded in the previous step, and follow the instructions to install.
+4. Return to the home page, tap `New` to enter the editor, and start creating!
+
+You can also use the `Open` button on the home page to directly find and open OpenUtau USTX project files.
 
 > [!WARNING]
-> This branch is under heavy development.
->
-> Architecture may change frequently.
+> The software is still in heavy development and may be unstable. Due to framework limitations, memory usage can be high — **remember to save often**. If the app crashes, you can find a recovery file ending in `.autosave.ustx` in the same directory as your project file.
 
----
+## Building & Contributing
 
-# Current Status
+If you want to help improve this project:
 
-### Working Platforms
+- If you find a bug, have a feature request, or have a suggestion for the UI/UX, feel free to report it in [Issues](https://github.com/yegh2/OpenUtauMobile/issues) or discuss suggestions in [Discussions](https://github.com/yegh2/OpenUtauMobile/discussions).
 
-* Android (11+ tested)
-* Windows
-* Linux
+- **Contributing Code:** Clone this repository locally, then open `OpenUtauMobile.sln` in the project root with Visual Studio / JetBrains Rider. It is recommended to create a new branch for your changes. Once completed, submit a Pull Request to the `dev` branch.
 
-### Planned Platforms
+## iOS Build Guide
 
-* iOS (failed passing compilation stage)
-* macOS (failed passing compilation stage)
-* WebAssembly (obstacles in initializing stage)
+Due to Apple's policy restrictions, the iOS version cannot be distributed as a pre-built package and must be signed by yourself.
 
-**Read `.agent` for more information on development workflow and project context.**
+### Getting the IPA from CI (recommended)
 
----
+1. Push to the `dev` branch — the [Build Unsigned IPA](https://github.com/yegh2/OpenUtauMobile/actions/workflows/build-unsigned-ipa.yml) workflow runs automatically on macOS.
+2. When the run finishes, download the `OpenUtauMobile-unsigned-ipa` artifact and extract the `.ipa` inside.
+3. Sign and install the IPA with your own certificate (free Apple ID works for personal devices).
 
-# Development Environment
+### Building locally on macOS
 
-## Requirements
+#### Requirements
 
-### SDKs
+- macOS (required)
+- .NET 10 SDK
+- Xcode 15 or later
+- Apple Developer Account (free account works for personal devices)
+- iOS workload
 
-* .NET 10 SDK
-* Android SDK (for Android development)
-* JDK (for Android development)
-* Xcode (for iOS/macOS development)
-
-### Recommended IDEs
-
-* Visual Studio (best recommended)
-* JetBrains Rider
-* VS Code (limited support)
-* Xcode (for iOS/macOS development only)
-
----
-
-# Getting Started
-
-## Clone Repository
+#### Setting Up the Development Environment
 
 ```bash
-git clone https://github.com/yegh2/OpenUtauMobile.git
-cd OpenUtauMobile
+# Install .NET 10 SDK (if not already installed)
+brew install dotnet-sdk
+
+# Install the iOS workload
+dotnet workload install ios
 ```
 
-## Checkout Development Branch
+#### Build Steps
 
-```bash
-git checkout dev
-```
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yegh2/OpenUtauMobile.git
+   cd OpenUtauMobile
+   git checkout dev
+   ```
 
-## Restore Dependencies
+2. **Restore dependencies (iOS only)**
+   ```bash
+   dotnet restore OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj -p:TargetFramework=net10.0-ios
+   ```
 
-```bash
-dotnet restore
-```
+3. **Publish the IPA**
+   ```bash
+   dotnet publish OpenUtauMobile.iOS/OpenUtauMobile.iOS.csproj \
+       -f net10.0-ios \
+       -c Debug \
+       -p:EnableCodeSigning=false \
+       -p:RuntimeIdentifier=ios-arm64
+   ```
 
-## Run Windows Version
+   The unsigned `.app` is produced in the output directory; package it into an IPA with:
+   ```bash
+   mkdir -p Payload && cp -R <output>/*.app Payload/ && zip -r OpenUtauMobile-unsigned.ipa Payload
+   ```
 
-```bash
-cd OpenUtauMobile.Windows
-dotnet build -t:Run -c Debug -f net10.0-windows
-```
+### Installing on iPhone
 
-## Build Android Version
+1. **Connect your iPhone to Mac via USB**
 
-Change to the Android project directory and connect an Android device or start an emulator, then execute:
+2. **Find your device ID**
+   ```bash
+   xcrun devicectl list devices
+   ```
 
-```bash
-dotnet build -t:Run -c Debug
-```
+3. **Install the app**
+   ```bash
+   xcrun devicectl device install app \
+       --device <your-device-id> \
+       <path-to-your-signed.ipa>
+   ```
 
-Use release configuration for better performance.
+4. **Trust the developer certificate**
 
----
+   After the first installation, go to your iPhone:
+   **Settings → General → VPN & Device Management**, find the developer certificate and tap Trust.
 
-# Contributing
+### FAQ
 
-Contributions are WELCOME!
+**Q: The build takes too long, what can I do?**
 
-You can refer to [TODO](https://docs.qq.com/sheet/DV2NuakZtQW1LZUNS)
+A: Debug mode builds typically take 5-15 minutes. Release builds (with AOT enabled) may take 20-40 minutes. It's recommended to use Debug mode for daily development.
 
-You can fork the repository, make changes, and submit a pull request to `dev` branch. Make sure to follow the coding styles in `.editorconfig`.
+**Q: What if the certificate expires?**
 
----
+A: Free developer certificates are valid for 7 days. After expiration, you need to re-sign and reinstall. A paid developer account ($99/year) provides certificates valid for 1 year.
 
-# Reporting Issues
+**Q: Can I build without a Mac?**
+
+A: No. Apple requires iOS apps to be built on macOS using the Xcode toolchain.
+
+## Reporting Issues
 
 When reporting bugs, please provide:
 
-* Device model
-* OS version (Whether is HarmonyOS or Android)
-* App version
-* Reproduction steps
-* Screenshots or screen recordings
-* Logs if available
+- Device model
+- iOS version
+- App version
+- Reproduction steps
+- Screenshots or screen recordings
+- Logs if available
 
----
+## License
 
-# Android Log Collection
-When encountering unexpected exits or crashes on Android, collecting logs can help identify the root cause.
+This project is licensed under the [Apache 2.0](./LICENSE) license.
 
-## Using adb logcat
-
-If you have Android platform tools installed:
-
-```bash
-adb logcat > log.txt
-```
-
-Reproduce the issue, then stop recording and upload the log file. Recommended to filter out personal information before sharing.
-
----
-
-# Special Thanks
-
-* [MysticILD](https://github.com/MysticILD) for earlier contributions (adding support for the HifiSampler resampler, vibrato and pitch anchor mode implementation, and finishing multi-selection mode. Provided full English, Ukrainian, and Russian localizations).
-
----
-
-# License
-
-This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
-
-This project also includes third-party code with their own licenses. See [Third Party Notices](THIRD_PARTY_NOTICES.md) for details.
+This is NOT the official OpenUtau application and must not impersonate the official OpenUtau.
