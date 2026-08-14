@@ -35,7 +35,7 @@ Other untested types are not guaranteed to work correctly.
 
 ## Quick Start
 
-1. Download the unsigned IPA from the latest [Release](https://github.com/yegh2/OpenUtauMobile/releases) (asset `OpenUtauMobile-unsigned.ipa`), then sign and install it on your iPhone.
+1. Download the unsigned IPA from the [Release](https://github.com/yegh2/OpenUtauMobile/releases) page (asset `OpenUtauMobile-unsigned.ipa`), then sign and install it on your iPhone. If no Release has been published yet, download the `OpenUtauMobile-unsigned-ipa` artifact from the latest [Actions](https://github.com/yegh2/OpenUtauMobile/actions/workflows/build-unsigned-ipa.yml) run instead.
 2. Download a voicebank. You can usually find download links on the [DiffSinger Custom Voicebank Share Page](https://docs.qq.com/sheet/DQXNDY0pPaEpOc3JN?tab=BB08J2) or the [UTAU wiki](https://utau.fandom.com/). Voicebanks are usually packaged in ZIP format.
 3. Open the software → Tap the `Singer` button on the home page → Tap `+` → Select the voicebank package (ZIP) downloaded in the previous step, and follow the instructions to install.
 4. Return to the home page, tap `New` to enter the editor, and start creating!
@@ -59,8 +59,8 @@ Due to Apple's policy restrictions, the iOS version cannot be distributed as a p
 
 ### Getting the IPA from Release (recommended)
 
-1. Push to the `dev` branch — the [Build Unsigned IPA](https://github.com/yegh2/OpenUtauMobile/actions/workflows/build-unsigned-ipa.yml) workflow runs automatically on macOS and publishes a [Release](https://github.com/yegh2/OpenUtauMobile/releases).
-2. When the run finishes, download the `OpenUtauMobile-unsigned.ipa` asset from the latest Release.
+1. Push to the `dev` branch — the [Build Unsigned IPA](https://github.com/yegh2/OpenUtauMobile/actions/workflows/build-unsigned-ipa.yml) workflow runs automatically on macOS.
+2. Download the `OpenUtauMobile-unsigned.ipa` asset from the [Release](https://github.com/yegh2/OpenUtauMobile/releases) page. If no Release has been published yet, download the `OpenUtauMobile-unsigned-ipa` artifact from the latest workflow run instead.
 3. Sign and install the IPA with your own certificate (free Apple ID works for personal devices).
 
 ### Building locally on macOS

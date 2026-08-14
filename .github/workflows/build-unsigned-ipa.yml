@@ -138,19 +138,4 @@ jobs:
           name: OpenUtauMobile-unsigned-ipa
           path: OpenUtauMobile-unsigned.ipa
 
-      # 自动发布 Release：把未签名 IPA 作为资源上传，供用户直接下载。
-      # 每次 push 到 dev 都会更新同一个 Release（tag: dev-latest），避免累积大量版本。
-      - name: Publish Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: dev-latest
-          name: OpenUtauMobile dev build
-          body: |
-            Automatic build from the `dev` branch.
-
-            Download `OpenUtauMobile-unsigned.ipa`, sign it with your own certificate, and install on iPhone.
-          files: OpenUtauMobile-unsigned.ipa
-          prerelease: true
-          fail_on_unmatched_files: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # 不自动发布 Release。需要发布时手动下载 artifact 里的 .ipa 再上传。

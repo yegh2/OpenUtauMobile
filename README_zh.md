@@ -35,7 +35,7 @@ OpenUtau Mobile 是一个面向移动端的开源免费歌声合成软件。
 
 ## 快速开始
 
-1. 在最新一次 [Release](https://github.com/yegh2/OpenUtauMobile/releases) 中下载未签名 IPA（资源名为 `OpenUtauMobile-unsigned.ipa`），自行签名安装到 iPhone。
+1. 在 [Release](https://github.com/yegh2/OpenUtauMobile/releases) 页面下载未签名 IPA（资源名为 `OpenUtauMobile-unsigned.ipa`），自行签名安装到 iPhone。若尚未发布 Release，可从最新一次 [Actions](https://github.com/yegh2/OpenUtauMobile/actions/workflows/build-unsigned-ipa.yml) 构建的 artifact（`OpenUtauMobile-unsigned-ipa`）中获取。
 2. 下载一个声库。通常你可以在 [DiffSinger 自制声库分享页面](https://docs.qq.com/sheet/DQXNDY0pPaEpOc3JN?tab=BB08J2) 或 [UTAU wiki](https://utau.fandom.com/) 找到下载地址。声库通常以 zip 格式打包。
 3. 打开软件 → 点击首页的 `歌手` 按钮 → 点击右下角 `+` → 选择上一步下载的声库安装包，然后按照指引安装。
 4. 返回首页，点击 `新建` 进入编辑器，开始你的创作吧！
@@ -59,8 +59,8 @@ OpenUtau Mobile 是一个面向移动端的开源免费歌声合成软件。
 
 ### 从 Release 获取 IPA（推荐）
 
-1. 推送到 `dev` 分支——[Build Unsigned IPA](https://github.com/yegh2/OpenUtauMobile/actions/workflows/build-unsigned-ipa.yml) 工作流会自动在 macOS 上构建，并发布 [Release](https://github.com/yegh2/OpenUtauMobile/releases)。
-2. 构建完成后，在最新 Release 中下载 `OpenUtauMobile-unsigned.ipa` 资源。
+1. 推送到 `dev` 分支——[Build Unsigned IPA](https://github.com/yegh2/OpenUtauMobile/actions/workflows/build-unsigned-ipa.yml) 工作流会自动在 macOS 上构建。
+2. 在 [Release](https://github.com/yegh2/OpenUtauMobile/releases) 页面下载 `OpenUtauMobile-unsigned.ipa` 资源。若尚未发布 Release，可从最新一次工作流运行的 artifact（`OpenUtauMobile-unsigned-ipa`）中获取。
 3. 使用你自己的证书签名安装（免费 Apple ID 即可用于个人设备）。
 
 ### 在 macOS 上本地构建
